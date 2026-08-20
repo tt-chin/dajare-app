@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'dajare_input_screen.dart';
 import '../widgets/primary_action_button.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -13,6 +14,17 @@ class HomeScreen extends StatelessWidget {
   final VoidCallback? onDajareInput;
   final VoidCallback? onDailyTopic;
   final VoidCallback? onCollection;
+
+  void _openDajareInput(BuildContext context) {
+    if (onDajareInput != null) {
+      onDajareInput!();
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const DajareInputScreen()));
+  }
 
   void _runAction(BuildContext context, VoidCallback? action) {
     if (action != null) {
@@ -66,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                         PrimaryActionButton(
                           label: 'ダジャレを入力する',
                           icon: Icons.edit_rounded,
-                          onPressed: () => _runAction(context, onDajareInput),
+                          onPressed: () => _openDajareInput(context),
                         ),
                         const SizedBox(height: 16),
                         PrimaryActionButton(
