@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('shows a child-friendly Firebase initialization error', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const FirebaseInitializationErrorApp());
+
+    expect(find.textContaining('アプリをはじめる準備ができませんでした。'), findsOneWidget);
+  });
+
   testWidgets('shows the home actions', (WidgetTester tester) async {
     await tester.pumpWidget(const DajareApp());
 

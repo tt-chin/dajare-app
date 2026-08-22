@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "416889139850",
+    "project_id": "dajare-app-35b8a",
+    "storage_bucket": "dajare-app-35b8a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416889139850:android:77c25d4125d60c71bc7373",
+        "android_client_info": {
+          "package_name": "com.ttchin.dajare_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCEOQlvn0Tdzhn-1hp-0nFj4GTm-xSxpsA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
