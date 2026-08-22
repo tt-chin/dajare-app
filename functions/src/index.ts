@@ -4,27 +4,31 @@ import {HttpsError, onCall} from "firebase-functions/v2/https";
 
 import {
   GeminiUnavailableError,
-  InvalidGeminiResponseError,
-  runGeminiConnectionTest,
+  runGeminiJudge,
 } from "./gemini";
 import {
+  createUnsafeFallback,
+  InvalidGeminiResponseError,
+  JudgeResult,
+} from "./judging";
+import {containsUnsafeContent} from "./safety";
+import {
   RequestValidationError,
+  UnsafeInputError,
   validateJudgeRequest,
 } from "./validation";
 
-interface JudgeDajareResponse {
-  message: string;
-}
-
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
-export const judgeDajare = onCall<unknown, Promise<JudgeDajareResponse>>(
+export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
   {region: "asia-northeast1", secrets: [geminiApiKey]},
   async (request) => {
     try {
-      validateJudgeRequest(request.data);
-      const result = await runGeminiConnectionTest(geminiApiKey.value());
-      return {message: result.message};
+      const text = validateJudgeRequest(request.data);
+      if (containsUnsafeContent(text)) {
+        throw new UnsafeInputError();
+      }
+      return await runGeminiJudge(text, geminiApiKey.value());
     } catch (error) {
       if (error instanceof RequestValidationError) {
         throw new HttpsError(
@@ -33,11 +37,15 @@ export const judgeDajare = onCall<unknown, Promise<JudgeDajareResponse>>(
         );
       }
 
+      if (error instanceof UnsafeInputError) {
+        return createUnsafeFallback();
+      }
+
       if (
         error instanceof GeminiUnavailableError ||
         error instanceof InvalidGeminiResponseError
       ) {
-        logger.warn("judgeDajare Gemini connection test failed", {
+        logger.warn("judgeDajare AI judging failed", {
           errorType: error.name,
         });
         throw new HttpsError(

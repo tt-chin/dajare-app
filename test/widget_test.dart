@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dajare_app/main.dart';
+import 'package:dajare_app/models/dajare_result.dart';
 import 'package:dajare_app/screens/dajare_input_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,7 +51,7 @@ void main() {
   testWidgets('shows loading and a callable success', (
     WidgetTester tester,
   ) async {
-    final response = Completer<String>();
+    final response = Completer<DajareResult>();
     await tester.pumpWidget(
       MaterialApp(home: DajareInputScreen(judgeDajare: (_) => response.future)),
     );
@@ -61,10 +62,19 @@ void main() {
 
     expect(find.text('ダジャレチェック中！'), findsOneWidget);
 
-    response.complete('Hello Dajare!');
+    response.complete(
+      const DajareResult(
+        isDajare: true,
+        score: 92,
+        word1: 'パンダ',
+        word2: 'パンだ',
+        comment: '音がそっくりで楽しいね！',
+        level: 'genius',
+      ),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Hello Dajare!'), findsOneWidget);
+    expect(find.text('音がそっくりで楽しいね！'), findsOneWidget);
   });
 
   testWidgets('shows a child-friendly callable failure', (

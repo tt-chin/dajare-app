@@ -7,6 +7,13 @@ export class RequestValidationError extends Error {
   }
 }
 
+export class UnsafeInputError extends Error {
+  constructor() {
+    super("Unsafe judgeDajare input");
+    this.name = "UnsafeInputError";
+  }
+}
+
 export function validateJudgeRequest(data: unknown): string {
   if (data === null || typeof data !== "object" || Array.isArray(data)) {
     throw new RequestValidationError();

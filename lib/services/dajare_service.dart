@@ -1,5 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 
+import '../models/dajare_result.dart';
+
 class DajareServiceException implements Exception {
   const DajareServiceException();
 }
@@ -7,19 +9,13 @@ class DajareServiceException implements Exception {
 class DajareService {
   const DajareService();
 
-  Future<String> judgeDajare(String text) async {
+  Future<DajareResult> judgeDajare(String text) async {
     try {
       final callable = FirebaseFunctions.instanceFor(
         region: 'asia-northeast1',
       ).httpsCallable('judgeDajare');
       final result = await callable.call<Map<String, dynamic>>({'text': text});
-      final message = result.data['message'];
-
-      if (message is! String || message.isEmpty) {
-        throw const DajareServiceException();
-      }
-
-      return message;
+      return DajareResult.fromMap(result.data);
     } catch (_) {
       throw const DajareServiceException();
     }

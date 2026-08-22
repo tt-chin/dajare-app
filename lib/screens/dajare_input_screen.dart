@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/dajare_result.dart';
 import '../services/dajare_service.dart';
 import '../widgets/primary_action_button.dart';
 
@@ -9,7 +10,7 @@ const int maxDajareLength = 80;
 class DajareInputScreen extends StatefulWidget {
   const DajareInputScreen({super.key, this.judgeDajare});
 
-  final Future<String> Function(String text)? judgeDajare;
+  final Future<DajareResult> Function(String text)? judgeDajare;
 
   @override
   State<DajareInputScreen> createState() => _DajareInputScreenState();
@@ -61,14 +62,14 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     try {
       final judgeDajare =
           widget.judgeDajare ?? const DajareService().judgeDajare;
-      final message = await judgeDajare(text);
+      final result = await judgeDajare(text);
       if (!mounted) {
         return;
       }
 
       setState(() {
         _isSubmitting = false;
-        _resultMessage = message;
+        _resultMessage = result.comment;
       });
     } catch (_) {
       if (!mounted) {
