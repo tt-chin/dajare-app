@@ -8,6 +8,9 @@ Japanese ダジャレ app for children aged 6–12. Flutter iOS/Android + Fireba
 - Child safety/privacy/data minimization are mandatory.
 - Codex implements one DEVELOPMENT_PLAN task at a time and stops for review.
 - Trusted AI scores/results are server-controlled and not writable by Flutter.
+- Approved character assets must not be redesigned, regenerated, recolored, renamed, or replaced without explicit approval.
+- `character_a` and `character_b` are permanent internal IDs; display names must not be used as asset-folder IDs.
+- Keep character/reaction-to-asset-path mapping centralized rather than scattering strings across screens.
 
 ## Frozen production flow
 Flutter → Anonymous Auth → callable `judgeDajare` → Auth/App Check/Input/Safety validation → Gemini → structured output → backend validation + level → trusted Firestore write → Flutter.
@@ -25,5 +28,8 @@ No public chat, messaging, friends, public posts/rankings, social feed, or photo
 7. `docs/FIREBASE_SPEC.md`
 8. `docs/SAFETY_PRIVACY.md`
 9. `docs/DEVELOPMENT_PLAN.md`
+10. Character assets → `docs/CHARACTER_ASSET_SPEC.md`
+
+`docs/CHARACTER_ASSET_SPEC.md` is authoritative for character IDs, reaction states, asset paths, consistency, and change control.
 
 If specs conflict, stop and identify the conflict instead of inventing a resolution.
