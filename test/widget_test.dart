@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:dajare_app/main.dart';
+import 'package:dajare_app/screens/dajare_input_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -44,12 +47,13 @@ void main() {
     expect(find.text('ダジャレを入れてみてね！'), findsOneWidget);
   });
 
-  testWidgets('shows loading and a local mock result', (
+  testWidgets('shows loading and a callable success', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const DajareApp());
-    await tester.tap(find.text('ダジャレを入力する'));
-    await tester.pumpAndSettle();
+    final response = Completer<String>();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(judgeDajare: (_) => response.future)),
+    );
 
     await tester.enterText(find.byKey(const Key('dajare_input')), 'パンダがパンだ！');
     await tester.tap(find.text('判定する！'));
@@ -57,11 +61,29 @@ void main() {
 
     expect(find.text('ダジャレチェック中！'), findsOneWidget);
 
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.pump();
+    response.complete('Hello Dajare!');
+    await tester.pumpAndSettle();
 
-    expect(find.text('92点'), findsOneWidget);
-    expect(find.text('うまい！🤣'), findsOneWidget);
+    expect(find.text('Hello Dajare!'), findsOneWidget);
+  });
+
+  testWidgets('shows a child-friendly callable failure', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DajareInputScreen(
+          judgeDajare: (_) async => throw Exception('internal details'),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byKey(const Key('dajare_input')), 'パンダがパンだ！');
+    await tester.tap(find.text('判定する！'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('もういちどためしてみてね！'), findsOneWidget);
+    expect(find.textContaining('internal details'), findsNothing);
   });
 
   testWidgets('rejects input over the maximum length', (

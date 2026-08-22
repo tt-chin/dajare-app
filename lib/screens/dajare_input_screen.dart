@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/dajare_service.dart';
 import '../widgets/primary_action_button.dart';
 
 const int maxDajareLength = 80;
 
 class DajareInputScreen extends StatefulWidget {
-  const DajareInputScreen({super.key});
+  const DajareInputScreen({super.key, this.judgeDajare});
+
+  final Future<String> Function(String text)? judgeDajare;
 
   @override
   State<DajareInputScreen> createState() => _DajareInputScreenState();
@@ -16,8 +19,9 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
   final _controller = TextEditingController();
 
   String? _errorText;
+  String? _requestErrorText;
+  String? _resultMessage;
   bool _isSubmitting = false;
-  bool _showMockResult = false;
 
   @override
   void dispose() {
@@ -31,7 +35,8 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     if (text.isEmpty) {
       setState(() {
         _errorText = 'ダジャレを入れてみてね！';
-        _showMockResult = false;
+        _requestErrorText = null;
+        _resultMessage = null;
       });
       return;
     }
@@ -39,7 +44,8 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     if (text.length > maxDajareLength) {
       setState(() {
         _errorText = 'もう少し短くしてみてね！';
-        _showMockResult = false;
+        _requestErrorText = null;
+        _resultMessage = null;
       });
       return;
     }
@@ -47,19 +53,33 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     FocusScope.of(context).unfocus();
     setState(() {
       _errorText = null;
+      _requestErrorText = null;
+      _resultMessage = null;
       _isSubmitting = true;
-      _showMockResult = false;
     });
 
-    await Future<void>.delayed(const Duration(milliseconds: 300));
-    if (!mounted) {
-      return;
+    try {
+      final judgeDajare =
+          widget.judgeDajare ?? const DajareService().judgeDajare;
+      final message = await judgeDajare(text);
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSubmitting = false;
+        _resultMessage = message;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSubmitting = false;
+        _requestErrorText = 'うまくつながらなかったみたい。もういちどためしてみてね！';
+      });
     }
-
-    setState(() {
-      _isSubmitting = false;
-      _showMockResult = true;
-    });
   }
 
   @override
@@ -120,28 +140,26 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
                         const SizedBox(height: 12),
                         const Text('ダジャレチェック中！', textAlign: TextAlign.center),
                       ],
-                      if (_showMockResult) ...[
+                      if (_requestErrorText != null) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          _requestErrorText!,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                      if (_resultMessage != null) ...[
                         const SizedBox(height: 32),
                         Card(
                           child: Padding(
                             padding: const EdgeInsets.all(24),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '92点',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text('うまい！🤣'),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'これは一時的なローカル判定です。',
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                            child: Text(
+                              _resultMessage!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ),
                         ),
