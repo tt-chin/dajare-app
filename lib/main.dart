@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/home_screen.dart';
+import 'services/anonymous_auth_service.dart';
 import 'services/firebase_initializer.dart';
 
 Future<void> main() async {
@@ -9,6 +10,7 @@ Future<void> main() async {
 
   try {
     await initializeFirebase();
+    await AnonymousAuthService().ensureSignedIn();
   } on FirebaseException {
     runApp(const FirebaseInitializationErrorApp());
     return;

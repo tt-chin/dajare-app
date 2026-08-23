@@ -3,6 +3,11 @@ import {defineSecret} from "firebase-functions/params";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 
 import {
+  requireAuthenticatedUid,
+  UnauthenticatedRequestError,
+} from "./authentication";
+import {saveTrustedDajareEntry} from "./dajare_entry_store";
+import {
   GeminiUnavailableError,
   runGeminiJudge,
 } from "./gemini";
@@ -12,6 +17,7 @@ import {
   JudgeResult,
 } from "./judging";
 import {containsUnsafeContent} from "./safety";
+import {judgeAndPersist} from "./judge_service";
 import {
   RequestValidationError,
   UnsafeInputError,
@@ -24,12 +30,28 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
   {region: "asia-northeast1", secrets: [geminiApiKey]},
   async (request) => {
     try {
+      const uid = requireAuthenticatedUid(request.auth);
       const text = validateJudgeRequest(request.data);
       if (containsUnsafeContent(text)) {
         throw new UnsafeInputError();
       }
-      return await runGeminiJudge(text, geminiApiKey.value());
+      return await judgeAndPersist(uid, text, {
+        judge: (input) => runGeminiJudge(input, geminiApiKey.value()),
+        save: saveTrustedDajareEntry,
+        onSaveFailure: (saveError) => {
+          logger.warn("judgeDajare persistence failed", {
+            errorType: saveError instanceof Error ? saveError.name : "unknown",
+          });
+        },
+      });
     } catch (error) {
+      if (error instanceof UnauthenticatedRequestError) {
+        throw new HttpsError(
+          "unauthenticated",
+          "アプリをはじめる準備ができていません。",
+        );
+      }
+
       if (error instanceof RequestValidationError) {
         throw new HttpsError(
           "invalid-argument",
