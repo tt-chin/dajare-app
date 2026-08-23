@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/dajare_result.dart';
 import '../services/dajare_service.dart';
 import '../widgets/primary_action_button.dart';
+import 'result_screen.dart';
 
 const int maxDajareLength = 80;
 
@@ -21,7 +22,6 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
 
   String? _errorText;
   String? _requestErrorText;
-  String? _resultMessage;
   bool _isSubmitting = false;
 
   @override
@@ -37,7 +37,6 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       setState(() {
         _errorText = 'ダジャレを入れてみてね！';
         _requestErrorText = null;
-        _resultMessage = null;
       });
       return;
     }
@@ -46,7 +45,6 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       setState(() {
         _errorText = 'もう少し短くしてみてね！';
         _requestErrorText = null;
-        _resultMessage = null;
       });
       return;
     }
@@ -55,7 +53,6 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     setState(() {
       _errorText = null;
       _requestErrorText = null;
-      _resultMessage = null;
       _isSubmitting = true;
     });
 
@@ -67,10 +64,10 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
         return;
       }
 
-      setState(() {
-        _isSubmitting = false;
-        _resultMessage = result.comment;
-      });
+      setState(() => _isSubmitting = false);
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => ResultScreen(result: result)),
+      );
     } catch (_) {
       if (!mounted) {
         return;
@@ -148,20 +145,6 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ],
-                      if (_resultMessage != null) ...[
-                        const SizedBox(height: 32),
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Text(
-                              _resultMessage!,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
                           ),
                         ),
                       ],

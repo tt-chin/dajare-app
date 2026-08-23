@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/character_presentation.dart';
 import 'dajare_input_screen.dart';
 import '../widgets/primary_action_button.dart';
 
@@ -56,10 +57,15 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text(
-                          '😺',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 72),
+                        Image.asset(
+                          CharacterPresentation.assetPath(
+                            CharacterPresentation.homeCharacter,
+                            CharacterReaction.normal,
+                          ),
+                          key: const Key('home_character_asset'),
+                          height: 144,
+                          fit: BoxFit.contain,
+                          semanticLabel: 'ダジャレを応援するキャラクター',
                         ),
                         const SizedBox(height: 16),
                         Text(

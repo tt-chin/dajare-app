@@ -19,6 +19,7 @@ void main() {
     await tester.pumpWidget(const DajareApp());
 
     expect(find.text('ダジャレアプリ'), findsOneWidget);
+    expect(find.byKey(const Key('home_character_asset')), findsOneWidget);
     expect(find.text('ダジャレを入力する'), findsOneWidget);
     expect(find.text('今日のお題'), findsOneWidget);
     expect(find.text('ダジャレ図鑑'), findsOneWidget);
@@ -74,7 +75,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('音がそっくりで楽しいね！'), findsOneWidget);
+    expect(find.text('92点'), findsOneWidget);
+    expect(find.text('天才！🤩'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('もういっかい！'));
+    await tester.tap(find.text('もういっかい！'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ダジャレを入れてみよう！'), findsOneWidget);
+    expect(find.text('パンダがパンだ！'), findsOneWidget);
   });
 
   testWidgets('shows a child-friendly callable failure', (
