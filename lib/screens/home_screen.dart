@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/character_presentation.dart';
+import 'daily_topic_screen.dart';
 import 'dajare_input_screen.dart';
 import '../widgets/primary_action_button.dart';
 
@@ -36,6 +37,17 @@ class HomeScreen extends StatelessWidget {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(const SnackBar(content: Text('じゅんび中だよ！')));
+  }
+
+  void _openDailyTopic(BuildContext context) {
+    if (onDailyTopic != null) {
+      onDailyTopic!();
+      return;
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const DailyTopicScreen()));
   }
 
   @override
@@ -91,7 +103,7 @@ class HomeScreen extends StatelessWidget {
                           label: '今日のお題',
                           icon: Icons.lightbulb_rounded,
                           isPrimary: false,
-                          onPressed: () => _runAction(context, onDailyTopic),
+                          onPressed: () => _openDailyTopic(context),
                         ),
                         const SizedBox(height: 16),
                         PrimaryActionButton(

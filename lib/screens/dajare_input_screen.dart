@@ -9,9 +9,10 @@ import 'result_screen.dart';
 const int maxDajareLength = 80;
 
 class DajareInputScreen extends StatefulWidget {
-  const DajareInputScreen({super.key, this.judgeDajare});
+  const DajareInputScreen({super.key, this.judgeDajare, this.topicWord});
 
   final Future<DajareResult> Function(String text)? judgeDajare;
+  final String? topicWord;
 
   @override
   State<DajareInputScreen> createState() => _DajareInputScreenState();
@@ -100,6 +101,24 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
+                      if (widget.topicWord != null) ...[
+                        const SizedBox(height: 16),
+                        Card(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondaryContainer,
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              '今日のお題：${widget.topicWord}',
+                              key: const Key('input_topic_word'),
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       TextField(
                         key: const Key('dajare_input'),

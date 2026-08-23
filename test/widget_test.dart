@@ -38,6 +38,19 @@ void main() {
     expect(find.text('判定する！'), findsOneWidget);
   });
 
+  testWidgets('opens today topic from Home', (WidgetTester tester) async {
+    await tester.pumpWidget(const DajareApp());
+
+    await tester.tap(find.text('今日のお題'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('きょうは、このことば！'), findsOneWidget);
+    expect(find.byKey(const Key('daily_topic_category')), findsOneWidget);
+    expect(find.byKey(const Key('daily_topic_word')), findsOneWidget);
+    expect(find.text('ダジャレを作る'), findsOneWidget);
+    expect(find.text('ヒントをみる'), findsOneWidget);
+  });
+
   testWidgets('rejects empty input', (WidgetTester tester) async {
     await tester.pumpWidget(const DajareApp());
     await tester.tap(find.text('ダジャレを入力する'));
