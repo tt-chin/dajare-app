@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/character_presentation.dart';
+import 'collection_screen.dart';
 import 'daily_topic_screen.dart';
 import 'dajare_input_screen.dart';
 import '../widgets/primary_action_button.dart';
@@ -28,15 +29,15 @@ class HomeScreen extends StatelessWidget {
     ).push(MaterialPageRoute<void>(builder: (_) => const DajareInputScreen()));
   }
 
-  void _runAction(BuildContext context, VoidCallback? action) {
-    if (action != null) {
-      action();
+  void _openCollection(BuildContext context) {
+    if (onCollection != null) {
+      onCollection!();
       return;
     }
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text('じゅんび中だよ！')));
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const CollectionScreen()));
   }
 
   void _openDailyTopic(BuildContext context) {
@@ -110,7 +111,7 @@ class HomeScreen extends StatelessWidget {
                           label: 'ダジャレ図鑑',
                           icon: Icons.menu_book_rounded,
                           isPrimary: false,
-                          onPressed: () => _runAction(context, onCollection),
+                          onPressed: () => _openCollection(context),
                         ),
                       ],
                     ),
