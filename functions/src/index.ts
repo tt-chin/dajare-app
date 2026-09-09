@@ -8,6 +8,7 @@ import {
 } from "./authentication";
 import {saveTrustedDajareEntry} from "./dajare_entry_store";
 import {
+  GeminiRateLimitedError,
   GeminiUnavailableError,
   runGeminiJudge,
 } from "./gemini";
@@ -61,6 +62,16 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
 
       if (error instanceof UnsafeInputError) {
         return createUnsafeFallback();
+      }
+
+      if (error instanceof GeminiRateLimitedError) {
+        logger.warn("judgeDajare AI quota exhausted or rate limited", {
+          errorType: error.name,
+        });
+        throw new HttpsError(
+          "resource-exhausted",
+          "ただいま混みあっています。少し待ってからためしてみてね！",
+        );
       }
 
       if (

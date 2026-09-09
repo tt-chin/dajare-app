@@ -45,6 +45,13 @@ export class GeminiUnavailableError extends Error {
   }
 }
 
+export class GeminiRateLimitedError extends Error {
+  constructor() {
+    super("Gemini request rate limited");
+    this.name = "GeminiRateLimitedError";
+  }
+}
+
 export function extractInteractionOutputText(
   interaction: unknown,
 ): string | undefined {
@@ -113,13 +120,20 @@ export async function runGeminiJudge(
       }),
     });
 
+    if (response.status === 429) {
+      throw new GeminiRateLimitedError();
+    }
+
     if (!response.ok) {
       throw new GeminiUnavailableError();
     }
 
     const interaction: unknown = await response.json();
     responseText = extractInteractionOutputText(interaction);
-  } catch {
+  } catch (error) {
+    if (error instanceof GeminiRateLimitedError) {
+      throw error;
+    }
     throw new GeminiUnavailableError();
   }
 

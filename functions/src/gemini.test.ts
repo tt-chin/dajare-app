@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  GeminiRateLimitedError,
   GeminiUnavailableError,
   extractInteractionOutputText,
   geminiModel,
@@ -118,5 +119,15 @@ test("normalizes Gemini request failures", async () => {
   await assert.rejects(
     runGeminiJudge("パンダがパンだ！", "test-key", fakeFetch),
     GeminiUnavailableError,
+  );
+});
+
+test("preserves Gemini quota and rate-limit failures", async () => {
+  const fakeFetch: typeof fetch = async () =>
+    new Response("quota exhausted", {status: 429});
+
+  await assert.rejects(
+    runGeminiJudge("パンダがパンだ！", "test-key", fakeFetch),
+    GeminiRateLimitedError,
   );
 });

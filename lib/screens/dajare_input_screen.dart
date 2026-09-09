@@ -1,18 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/dajare_result.dart';
 import '../services/dajare_service.dart';
+import '../services/speech_input_service.dart';
 import '../widgets/primary_action_button.dart';
 import 'result_screen.dart';
 
 const int maxDajareLength = 80;
 
 class DajareInputScreen extends StatefulWidget {
-  const DajareInputScreen({super.key, this.judgeDajare, this.topicWord});
+  const DajareInputScreen({
+    super.key,
+    this.judgeDajare,
+    this.topicWord,
+    this.speechInputService,
+  });
 
   final Future<DajareResult> Function(String text)? judgeDajare;
   final String? topicWord;
+  final SpeechInputService? speechInputService;
 
   @override
   State<DajareInputScreen> createState() => _DajareInputScreenState();
@@ -20,15 +29,93 @@ class DajareInputScreen extends StatefulWidget {
 
 class _DajareInputScreenState extends State<DajareInputScreen> {
   final _controller = TextEditingController();
+  late final SpeechInputService _speechInputService;
 
   String? _errorText;
   String? _requestErrorText;
   bool _isSubmitting = false;
+  _SpeechInputState _speechState = _SpeechInputState.idle;
+
+  @override
+  void initState() {
+    super.initState();
+    _speechInputService =
+        widget.speechInputService ?? DeviceSpeechInputService();
+  }
 
   @override
   void dispose() {
+    unawaited(_speechInputService.stop());
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _toggleSpeechInput() async {
+    if (_speechState == _SpeechInputState.listening) {
+      await _speechInputService.stop();
+      if (mounted) {
+        setState(() => _speechState = _SpeechInputState.idle);
+      }
+      return;
+    }
+
+    setState(() {
+      _speechState = _SpeechInputState.initializing;
+      _requestErrorText = null;
+    });
+
+    try {
+      final available = await _speechInputService.initialize(
+        onListening: () {
+          if (mounted) {
+            setState(() => _speechState = _SpeechInputState.listening);
+          }
+        },
+        onDone: () {
+          if (mounted && _speechState == _SpeechInputState.listening) {
+            setState(() => _speechState = _SpeechInputState.idle);
+          }
+        },
+        onError: _showSpeechFallback,
+      );
+      if (!mounted) {
+        return;
+      }
+      if (!available) {
+        _showSpeechFallback();
+        return;
+      }
+
+      await _speechInputService.listen(onResult: _applyRecognizedText);
+    } catch (_) {
+      _showSpeechFallback();
+    }
+  }
+
+  void _applyRecognizedText(String recognizedText) {
+    if (!mounted || recognizedText.trim().isEmpty) {
+      return;
+    }
+
+    final text = recognizedText.trim();
+    final safelyLimited = text.length <= maxDajareLength
+        ? text
+        : text.substring(0, maxDajareLength);
+    setState(() {
+      _controller.value = TextEditingValue(
+        text: safelyLimited,
+        selection: TextSelection.collapsed(offset: safelyLimited.length),
+      );
+      _errorText = text.length > maxDajareLength ? '長かったので、短くして入れたよ！' : null;
+      _speechState = _SpeechInputState.recognized;
+    });
+  }
+
+  void _showSpeechFallback() {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _speechState = _SpeechInputState.unavailable);
   }
 
   Future<void> _judgeDajare() async {
@@ -69,6 +156,15 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => ResultScreen(result: result)),
       );
+    } on DajareRateLimitedException {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _isSubmitting = false;
+        _requestErrorText = 'ただいま混みあっています。少し待ってからためしてみてね！';
+      });
     } catch (_) {
       if (!mounted) {
         return;
@@ -144,6 +240,72 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
                           }
                         },
                       ),
+                      const SizedBox(height: 12),
+                      Semantics(
+                        button: true,
+                        label: _speechState == _SpeechInputState.listening
+                            ? '音声入力を止める'
+                            : '声でダジャレを入力する',
+                        child: SizedBox(
+                          height: 56,
+                          child: OutlinedButton.icon(
+                            key: const Key('speech_input_button'),
+                            onPressed:
+                                _isSubmitting ||
+                                    _speechState ==
+                                        _SpeechInputState.initializing
+                                ? null
+                                : _toggleSpeechInput,
+                            icon: _speechState == _SpeechInputState.initializing
+                                ? const SizedBox.square(
+                                    dimension: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(
+                                    _speechState == _SpeechInputState.listening
+                                        ? Icons.stop_circle_rounded
+                                        : Icons.mic_rounded,
+                                  ),
+                            label: Text(
+                              _speechState == _SpeechInputState.listening
+                                  ? 'おわる'
+                                  : '声で入れる',
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_speechState == _SpeechInputState.initializing) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'マイクをじゅんびしているよ…',
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      if (_speechState == _SpeechInputState.listening) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'きいているよ！ ダジャレを話してね！',
+                          key: Key('speech_listening_message'),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      if (_speechState == _SpeechInputState.recognized) ...[
+                        const SizedBox(height: 8),
+                        const Text('声を文字にしたよ！', textAlign: TextAlign.center),
+                      ],
+                      if (_speechState == _SpeechInputState.unavailable) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'マイクがつかえないみたい。\n文字でダジャレを入れてみてね！',
+                          key: const Key('speech_unavailable_message'),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       PrimaryActionButton(
                         key: const Key('judge_button'),
@@ -177,4 +339,12 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       ),
     );
   }
+}
+
+enum _SpeechInputState {
+  idle,
+  initializing,
+  listening,
+  recognized,
+  unavailable,
 }

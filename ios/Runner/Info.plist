@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ダジャレを声で入力するためにマイクを使います。</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>話したダジャレを文字にするために音声認識を使います。</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

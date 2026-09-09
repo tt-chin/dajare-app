@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dajare_app/main.dart';
 import 'package:dajare_app/models/dajare_result.dart';
 import 'package:dajare_app/screens/dajare_input_screen.dart';
+import 'package:dajare_app/services/dajare_service.dart';
+import 'package:dajare_app/services/speech_input_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -36,6 +38,93 @@ void main() {
     expect(find.text('ダジャレを入れてみよう！'), findsOneWidget);
     expect(find.byKey(const Key('dajare_input')), findsOneWidget);
     expect(find.text('判定する！'), findsOneWidget);
+    expect(find.byKey(const Key('speech_input_button')), findsOneWidget);
+  });
+
+  testWidgets('starts listening and shows child-friendly guidance', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+
+    expect(speech.listenCalled, isTrue);
+    expect(find.byKey(const Key('speech_listening_message')), findsOneWidget);
+    expect(find.textContaining('きいているよ！'), findsOneWidget);
+  });
+
+  testWidgets('recognized speech overwrites existing text', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+    await tester.enterText(find.byKey(const Key('dajare_input')), 'もとの文字');
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitResult('パンダがパンだ！');
+    await tester.pump();
+
+    expect(find.text('パンダがパンだ！'), findsOneWidget);
+    expect(find.text('もとの文字'), findsNothing);
+    expect(find.text('声を文字にしたよ！'), findsOneWidget);
+  });
+
+  testWidgets('recognized speech is safely limited to 80 characters', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitResult(List.filled(81, 'あ').join());
+    await tester.pump();
+
+    final field = tester.widget<TextField>(
+      find.byKey(const Key('dajare_input')),
+    );
+    expect(field.controller!.text.length, maxDajareLength);
+    expect(find.text('長かったので、短くして入れたよ！'), findsOneWidget);
+  });
+
+  testWidgets('permission denial keeps text input available', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService(available: false);
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('speech_unavailable_message')), findsOneWidget);
+    expect(find.byKey(const Key('dajare_input')), findsOneWidget);
+    expect(find.text('判定する！'), findsOneWidget);
+  });
+
+  testWidgets('speech errors do not expose internal codes', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService(errorOnListen: true);
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('speech_unavailable_message')), findsOneWidget);
+    expect(find.textContaining('error_permission'), findsNothing);
   });
 
   testWidgets('opens today topic from Home', (WidgetTester tester) async {
@@ -118,6 +207,24 @@ void main() {
     expect(find.textContaining('internal details'), findsNothing);
   });
 
+  testWidgets('shows a retry-later message when AI quota is exhausted', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DajareInputScreen(
+          judgeDajare: (_) async => throw const DajareRateLimitedException(),
+        ),
+      ),
+    );
+
+    await tester.enterText(find.byKey(const Key('dajare_input')), 'パンダがパンだ！');
+    await tester.tap(find.text('判定する！'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('少し待ってからためしてみてね！'), findsOneWidget);
+  });
+
   testWidgets('rejects input over the maximum length', (
     WidgetTester tester,
   ) async {
@@ -134,4 +241,39 @@ void main() {
 
     expect(find.text('もう少し短くしてみてね！'), findsOneWidget);
   });
+}
+
+class FakeSpeechInputService implements SpeechInputService {
+  FakeSpeechInputService({this.available = true, this.errorOnListen = false});
+
+  final bool available;
+  final bool errorOnListen;
+  bool listenCalled = false;
+  SpeechTextCallback? _onResult;
+  void Function()? _onListening;
+
+  @override
+  Future<bool> initialize({
+    required void Function() onListening,
+    required void Function() onDone,
+    required void Function() onError,
+  }) async {
+    _onListening = onListening;
+    return available;
+  }
+
+  @override
+  Future<void> listen({required SpeechTextCallback onResult}) async {
+    if (errorOnListen) {
+      throw Exception('error_permission');
+    }
+    listenCalled = true;
+    _onResult = onResult;
+    _onListening?.call();
+  }
+
+  void emitResult(String text) => _onResult?.call(text);
+
+  @override
+  Future<void> stop() async {}
 }

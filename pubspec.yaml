@@ -34,6 +34,7 @@ dependencies:
   firebase_core: ^4.13.0
   flutter:
     sdk: flutter
+  speech_to_text: ^7.4.0
 
 dev_dependencies:
   flutter_test:

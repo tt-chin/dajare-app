@@ -6,6 +6,10 @@ class DajareServiceException implements Exception {
   const DajareServiceException();
 }
 
+class DajareRateLimitedException extends DajareServiceException {
+  const DajareRateLimitedException();
+}
+
 class DajareService {
   const DajareService();
 
@@ -16,6 +20,11 @@ class DajareService {
       ).httpsCallable('judgeDajare');
       final result = await callable.call<Map<String, dynamic>>({'text': text});
       return DajareResult.fromMap(result.data);
+    } on FirebaseFunctionsException catch (error) {
+      if (error.code == 'resource-exhausted') {
+        throw const DajareRateLimitedException();
+      }
+      throw const DajareServiceException();
     } catch (_) {
       throw const DajareServiceException();
     }
