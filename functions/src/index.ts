@@ -74,7 +74,7 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
       if (error instanceof RateLimitError) {
         throw new HttpsError(
           "resource-exhausted",
-          "すこしまってからためしてみてね！",
+          "ちょっとはやすぎるみたい！\nすこしまってからためしてみてね！",
         );
       }
 

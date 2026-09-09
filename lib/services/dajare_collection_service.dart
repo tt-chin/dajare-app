@@ -24,10 +24,10 @@ class DajareCollectionService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      final entries = snapshot.docs
+      return snapshot.docs
           .map((document) => DajareEntry.tryFromMap(document.data()))
-          .whereType<DajareEntry>();
-      return DajareEntry.newestFirst(entries);
+          .whereType<DajareEntry>()
+          .toList();
     } on FirebaseException {
       throw const DajareCollectionException();
     }

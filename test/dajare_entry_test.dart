@@ -24,27 +24,4 @@ void main() {
       isNull,
     );
   });
-
-  test('sorts entries from newest to oldest', () {
-    final oldEntry = _entry('ふるいダジャレ', DateTime(2026, 8, 23));
-    final newEntry = _entry('あたらしいダジャレ', DateTime(2026, 8, 24));
-
-    final sorted = DajareEntry.newestFirst([oldEntry, newEntry]);
-
-    expect(sorted.map((entry) => entry.submittedText), [
-      'あたらしいダジャレ',
-      'ふるいダジャレ',
-    ]);
-  });
 }
-
-DajareEntry _entry(String text, DateTime createdAt) => DajareEntry(
-  submittedText: text,
-  isDajare: true,
-  score: 70,
-  level: 'laugh',
-  word1: '',
-  word2: '',
-  comment: 'いいダジャレだね！',
-  createdAt: createdAt,
-);

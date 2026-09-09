@@ -26,7 +26,7 @@ void main() {
     expect(find.text('ダジャレを作る'), findsOneWidget);
   });
 
-  testWidgets('shows entries newest first with trusted result fields', (
+  testWidgets('shows query-ordered entries with trusted result fields', (
     tester,
   ) async {
     final oldEntry = _entry(
@@ -46,7 +46,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: CollectionScreen(loadEntries: () async => [oldEntry, newEntry]),
+        home: CollectionScreen(loadEntries: () async => [newEntry, oldEntry]),
       ),
     );
     await tester.pumpAndSettle();

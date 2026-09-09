@@ -57,7 +57,7 @@ class _CollectionScreenState extends State<CollectionScreen> {
               return _CollectionError(onRetry: _retry);
             }
 
-            final entries = DajareEntry.newestFirst(snapshot.data ?? const []);
+            final entries = snapshot.data ?? const [];
             if (entries.isEmpty) {
               return _CollectionEmpty(onCreate: _openInput);
             }

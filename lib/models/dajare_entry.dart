@@ -65,10 +65,4 @@ class DajareEntry {
       createdAt: createdAt,
     );
   }
-
-  static List<DajareEntry> newestFirst(Iterable<DajareEntry> entries) {
-    final sorted = entries.toList();
-    sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return sorted;
-  }
 }
