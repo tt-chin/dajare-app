@@ -19,7 +19,11 @@ export function validateJudgeRequest(data: unknown): string {
     throw new RequestValidationError();
   }
 
-  const text = (data as Record<string, unknown>).text;
+  const payload = data as Record<string, unknown>;
+  if (Object.keys(payload).some((key) => key !== "text")) {
+    throw new RequestValidationError();
+  }
+  const text = payload.text;
   if (typeof text !== "string") {
     throw new RequestValidationError();
   }

@@ -18,6 +18,11 @@ Use Firebase/Google Cloud Secret Manager, e.g. `GEMINI_API_KEY`; never commit or
 ## App Check
 Before release: Android Play Integrity; iOS supported App Attest/Apple configuration. Debug provider only in development. Observe traffic before enforcement.
 
+Task 13 prepares Flutter providers (`debug` in debug builds, Play Integrity on Android production, App Attest with DeviceCheck fallback on Apple production). Console enforcement remains OFF until Task 14 device validation. Register local debug tokens in Firebase Console; never commit them.
+
+## Rate protection
+`judgeDajare` uses an Admin SDK Firestore transaction at `users/{uid}/rateLimits/judgeDajare`: 5-second per-UID cooldown and 100 accepted attempts per UTC day. This server-only document is denied to clients by the default rules. Validation and safety checks run before quota consumption; quota consumption runs before Gemini.
+
 ## Errors
 `unauthenticated`, `invalid_input`, `unsafe_input`, `rate_limited`, `ai_unavailable`, `invalid_ai_response`, `internal_error`.
 

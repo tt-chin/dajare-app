@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dajare_app/main.dart';
 import 'package:dajare_app/models/dajare_result.dart';
 import 'package:dajare_app/screens/dajare_input_screen.dart';
+import 'package:dajare_app/services/dajare_service.dart';
 import 'package:dajare_app/services/speech_input_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -204,6 +205,23 @@ void main() {
 
     expect(find.textContaining('もういちどためしてみてね！'), findsOneWidget);
     expect(find.textContaining('internal details'), findsNothing);
+  });
+
+  testWidgets('shows a child-friendly rate-limit message', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DajareInputScreen(
+          judgeDajare: (_) async => throw const DajareRateLimitedException(),
+        ),
+      ),
+    );
+    await tester.enterText(find.byKey(const Key('dajare_input')), 'パンダがパンだ！');
+    await tester.tap(find.text('判定する！'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('ちょっとはやすぎるみたい！'), findsOneWidget);
+    expect(find.textContaining('resource-exhausted'), findsNothing);
   });
 
   testWidgets('rejects input over the maximum length', (

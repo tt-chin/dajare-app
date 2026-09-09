@@ -18,6 +18,7 @@ import {
 } from "./judging";
 import {containsUnsafeContent} from "./safety";
 import {judgeAndPersist} from "./judge_service";
+import {consumeJudgeQuota, RateLimitError} from "./rate_limit";
 import {
   RequestValidationError,
   UnsafeInputError,
@@ -27,7 +28,13 @@ import {
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 
 export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
-  {region: "asia-northeast1", secrets: [geminiApiKey]},
+  {
+    region: "asia-northeast1",
+    secrets: [geminiApiKey],
+    enforceAppCheck: false,
+    timeoutSeconds: 30,
+    maxInstances: 10,
+  },
   async (request) => {
     try {
       const uid = requireAuthenticatedUid(request.auth);
@@ -36,6 +43,7 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
         throw new UnsafeInputError();
       }
       return await judgeAndPersist(uid, text, {
+        consumeQuota: consumeJudgeQuota,
         judge: (input) => runGeminiJudge(input, geminiApiKey.value()),
         save: saveTrustedDajareEntry,
         onSaveFailure: (saveError) => {
@@ -63,16 +71,30 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
         return createUnsafeFallback();
       }
 
-      if (
-        error instanceof GeminiUnavailableError ||
-        error instanceof InvalidGeminiResponseError
-      ) {
+      if (error instanceof RateLimitError) {
+        throw new HttpsError(
+          "resource-exhausted",
+          "すこしまってからためしてみてね！",
+        );
+      }
+
+      if (error instanceof GeminiUnavailableError) {
         logger.warn("judgeDajare AI judging failed", {
           errorType: error.name,
         });
         throw new HttpsError(
           "unavailable",
           "うまく接続できませんでした。",
+        );
+      }
+
+      if (error instanceof InvalidGeminiResponseError) {
+        logger.warn("judgeDajare AI response was invalid", {
+          errorType: error.name,
+        });
+        throw new HttpsError(
+          "failed-precondition",
+          "うまく判定できませんでした。",
         );
       }
 

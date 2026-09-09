@@ -48,3 +48,22 @@ test("returns the AI result when persistence fails", async () => {
   assert.equal(returned, result);
   assert.equal(failureWasHandled, true);
 });
+
+test("checks rate protection before calling Gemini", async () => {
+  let judgeCalled = false;
+  await assert.rejects(
+    judgeAndPersist("user-1", "パンダがパンだ！", {
+      consumeQuota: async (uid) => {
+        assert.equal(uid, "user-1");
+        throw new Error("limited");
+      },
+      judge: async () => {
+        judgeCalled = true;
+        return result;
+      },
+      save: async () => {},
+      onSaveFailure: () => {},
+    }),
+  );
+  assert.equal(judgeCalled, false);
+});

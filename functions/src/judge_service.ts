@@ -1,6 +1,7 @@
 import {JudgeResult} from "./judging";
 
 export interface JudgeServiceDependencies {
+  consumeQuota?: (uid: string) => Promise<void>;
   judge: (text: string) => Promise<JudgeResult>;
   save: (uid: string, text: string, result: JudgeResult) => Promise<void>;
   onSaveFailure: (error: unknown) => void;
@@ -11,6 +12,7 @@ export async function judgeAndPersist(
   text: string,
   dependencies: JudgeServiceDependencies,
 ): Promise<JudgeResult> {
+  await dependencies.consumeQuota?.(uid);
   const result = await dependencies.judge(text);
 
   try {

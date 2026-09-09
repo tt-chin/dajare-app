@@ -36,3 +36,14 @@ test("rejects text over the maximum length", () => {
     RequestValidationError,
   );
 });
+
+test("rejects unexpected or oversized payload fields", () => {
+  assert.throws(
+    () => validateJudgeRequest({text: "パンダがパンだ！", uid: "other-user"}),
+    RequestValidationError,
+  );
+  assert.throws(
+    () => validateJudgeRequest({text: "パンダがパンだ！", extra: "x".repeat(100000)}),
+    RequestValidationError,
+  );
+});

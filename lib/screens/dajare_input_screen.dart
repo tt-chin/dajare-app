@@ -156,6 +156,12 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => ResultScreen(result: result)),
       );
+    } on DajareRateLimitedException {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _requestErrorText = 'ちょっとはやすぎるみたい！\nすこしまってからためしてね！';
+      });
     } catch (_) {
       if (!mounted) {
         return;
