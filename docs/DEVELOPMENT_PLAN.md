@@ -30,6 +30,7 @@ Milestones: A=01–03; B=04–08; C=09–11; D=12–14; E=15.
 - 図鑑 shows empty after a successful judgement. Suspected server-side save failure swallowed by `onSaveFailure` (logs `judgeDajare persistence failed`), or a stale deployed function. Needs Firebase Console check (Firestore data, Functions logs, deploy time). `firebase` CLI and `gcloud` are not installed locally.
 - Speech input fixed and verified on device: recognition kept running because the UI left `listening` on the first partial result and no `listenFor`/`pauseFor` was set, so text piled up across sessions. Now auto-stops (10s/3s), manual stop works, listeners are rebound on the `SpeechToText` singleton, and no-speech (`error_no_match`/`error_speech_timeout`) shows a retry message instead of "mic unavailable".
 - Debug builds crash (SIGBUS, KERN_CODESIGN_ERROR) if the app keeps running after `flutter run` disconnects; keep the debugger attached or use `--release` for untethered tests.
-- Not yet verified: Android (no Android SDK locally), TestFlight path.
+- TestFlight: build 1.0.0 (1) uploaded as "TestFlight Internal Only" from Xcode Organizer (bundle ID `com.ttchin.dajareApp`, Cloud Managed Apple Distribution signing). Release build verified on device first. `ITSAppUsesNonExemptEncryption = false` added to Info.plist. Launch image is still the Flutter placeholder. An unused App ID `com.rtsai.dajareApp` exists in the team from an earlier attempt.
+- Not yet verified: Android (no Android SDK locally).
 
 When asked `Task XX`, read relevant specs, inspect repo, implement only XX, run checks, report changed files/commands/results/manual steps, then stop.
