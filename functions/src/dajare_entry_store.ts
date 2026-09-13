@@ -1,7 +1,8 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {FieldValue, getFirestore} from "firebase-admin/firestore";
+import {FieldValue} from "firebase-admin/firestore";
+import {getDefaultFirestore} from "./firestore_client";
 
 import {JudgeResult} from "./judging";
+import {ReportStage} from "./diagnostics";
 
 export const DAJARE_ENTRY_FIELDS = [
   "submittedText",
@@ -30,15 +31,12 @@ export interface DajareEntryStoreDependencies {
   write: (path: string, entry: TrustedDajareEntry) => Promise<void>;
 }
 
-function productionDependencies(): DajareEntryStoreDependencies {
-  if (getApps().length === 0) {
-    initializeApp();
-  }
-
+function productionDependencies(onStage: ReportStage): DajareEntryStoreDependencies {
+  const firestore = getDefaultFirestore(onStage);
   return {
     serverTimestamp: () => FieldValue.serverTimestamp(),
     write: async (path, entry) => {
-      await getFirestore().collection(path).add(entry);
+      await firestore.collection(path).add(entry);
     },
   };
 }
@@ -47,8 +45,11 @@ export async function saveTrustedDajareEntry(
   uid: string,
   submittedText: string,
   result: JudgeResult,
-  dependencies: DajareEntryStoreDependencies = productionDependencies(),
+  dependencies?: DajareEntryStoreDependencies,
+  onStage: ReportStage = () => {},
 ): Promise<void> {
+  dependencies ??= productionDependencies(onStage);
+  onStage("entry_write");
   const path = `users/${uid}/dajareEntries`;
   const entry: TrustedDajareEntry = {
     submittedText,

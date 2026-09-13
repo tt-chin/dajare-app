@@ -1,5 +1,6 @@
-import {getApps, initializeApp} from "firebase-admin/app";
-import {getFirestore, Timestamp} from "firebase-admin/firestore";
+import {Timestamp} from "firebase-admin/firestore";
+import {getDefaultFirestore} from "./firestore_client";
+import {ReportStage} from "./diagnostics";
 
 export const minimumIntervalSeconds = 5;
 export const dailyLimit = 100;
@@ -29,14 +30,15 @@ function utcDay(nowMillis: number): string {
   return new Date(nowMillis).toISOString().slice(0, 10);
 }
 
-function productionDependencies(): RateLimitDependencies {
-  if (getApps().length === 0) initializeApp();
-  const firestore = getFirestore();
+function productionDependencies(onStage: ReportStage): RateLimitDependencies {
+  const firestore = getDefaultFirestore(onStage);
   return {
     nowMillis: () => Date.now(),
     update: async (uid, decide) => {
+      onStage("quota_read");
       const reference = firestore.doc(`users/${uid}/rateLimits/judgeDajare`);
       await firestore.runTransaction(async (transaction) => {
+        onStage("quota_read");
         const snapshot = await transaction.get(reference);
         const data = snapshot.data();
         const lastRequest = data?.lastRequestAt;
@@ -47,6 +49,7 @@ function productionDependencies(): RateLimitDependencies {
             lastRequest.toMillis() : 0,
         } : undefined;
         const next = decide(current);
+        onStage("quota_write");
         transaction.set(reference, {
           day: next.day,
           count: next.count,
@@ -59,8 +62,10 @@ function productionDependencies(): RateLimitDependencies {
 
 export async function consumeJudgeQuota(
   uid: string,
-  dependencies: RateLimitDependencies = productionDependencies(),
+  dependencies?: RateLimitDependencies,
+  onStage: ReportStage = () => {},
 ): Promise<void> {
+  dependencies ??= productionDependencies(onStage);
   const now = dependencies.nowMillis();
   const today = utcDay(now);
   await dependencies.update(uid, (current) => {

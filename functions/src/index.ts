@@ -7,6 +7,7 @@ import {
   UnauthenticatedRequestError,
 } from "./authentication";
 import {saveTrustedDajareEntry} from "./dajare_entry_store";
+import {JudgeStage, safeDiagnostics} from "./diagnostics";
 import {
   GeminiUnavailableError,
   runGeminiJudge,
@@ -36,6 +37,8 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
     maxInstances: 10,
   },
   async (request) => {
+    let stage: JudgeStage = "validation";
+    const onStage = (next: JudgeStage) => { stage = next; };
     try {
       const uid = requireAuthenticatedUid(request.auth);
       const text = validateJudgeRequest(request.data);
@@ -43,13 +46,16 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
         throw new UnsafeInputError();
       }
       return await judgeAndPersist(uid, text, {
-        consumeQuota: consumeJudgeQuota,
-        judge: (input) => runGeminiJudge(input, geminiApiKey.value()),
-        save: saveTrustedDajareEntry,
+        consumeQuota: (uid) => consumeJudgeQuota(uid, undefined, onStage),
+        judge: (input) => {
+          onStage("ai_judge");
+          return runGeminiJudge(input, geminiApiKey.value());
+        },
+        save: (uid, input, result) =>
+          saveTrustedDajareEntry(uid, input, result, undefined, onStage),
         onSaveFailure: (saveError) => {
-          logger.warn("judgeDajare persistence failed", {
-            errorType: saveError instanceof Error ? saveError.name : "unknown",
-          });
+          logger.warn("judgeDajare persistence failed",
+            safeDiagnostics(saveError, stage));
         },
       });
     } catch (error) {
@@ -79,9 +85,7 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
       }
 
       if (error instanceof GeminiUnavailableError) {
-        logger.warn("judgeDajare AI judging failed", {
-          errorType: error.name,
-        });
+        logger.warn("judgeDajare AI judging failed", safeDiagnostics(error, stage));
         throw new HttpsError(
           "unavailable",
           "うまく接続できませんでした。",
@@ -89,18 +93,14 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
       }
 
       if (error instanceof InvalidGeminiResponseError) {
-        logger.warn("judgeDajare AI response was invalid", {
-          errorType: error.name,
-        });
+        logger.warn("judgeDajare AI response was invalid", safeDiagnostics(error, stage));
         throw new HttpsError(
           "failed-precondition",
           "うまく判定できませんでした。",
         );
       }
 
-      logger.error("judgeDajare failed", {
-        errorType: error instanceof Error ? error.name : "unknown",
-      });
+      logger.error("judgeDajare failed", safeDiagnostics(error, stage));
       throw new HttpsError(
         "internal",
         "うまく処理できませんでした。",
