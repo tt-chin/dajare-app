@@ -1,18 +1,18 @@
-# AI_SPEC.md — Specification Freeze v1
-## Contract
-Input: `{"text":"パンダがパンだ！"}`.
-Gemini structured output only:
-`{"isDajare":true,"score":92,"word1":"パンダ","word2":"パンだ","comment":"「パンダ」と「パンだ」の音がそっくり！"}`.
-Backend derives `level`.
+# AI_SPEC.md — 規格凍結 v1
+## 介面約定
+輸入：`{"text":"パンダがパンだ！"}`。
+Gemini 只能輸出 structured output：
+`{"isDajare":true,"score":92,"word1":"パンダ","word2":"パンだ","comment":"「パンダ」と「パンだ」の音がそっくり！"}`。
+後端推導出 `level`。
 
-Judge sound similarity, meaning twist, Japanese understandability/naturalness, creativity, and child appropriateness. Score is integer 0–100.
+判定聲音相似度、意義轉折、日文的易懂度/自然度、創意，以及是否適合兒童。分數為 0–100 的整數。
 
-Backend validates types/required fields/range/string lengths/safety and safely handles malformed output.
+後端驗證型別/必填欄位/範圍/字串長度/安全性，並安全地處理格式錯誤的輸出。
 
-Never shame. Weak input gets encouragement.
+不得讓孩子感到羞愧。較弱的輸入應給予鼓勵。
 
-Do not generate/expand sexual/adult content, graphic violence, self-harm, hate, dangerous instructions, bullying, personal-data requests, or frightening age-inappropriate content.
+不得生成或延伸性/成人內容、血腥暴力、自我傷害、仇恨、危險指示、霸凌、索取個人資料，或令人害怕、不適合年齡的內容。
 
-Unsafe redirect: `ほかのことばでダジャレを作ってみよう！どうぶつや食べもののお題がおすすめだよ。`
+不安全時的引導文案：`ほかのことばでダジャレを作ってみよう！どうぶつや食べもののお題がおすすめだよ。`
 
-Gemini never controls navigation, colors, animation, assets, HTML/Markdown rendering, or application logic.
+Gemini 不得控制導覽、顏色、動畫、素材、HTML/Markdown 呈現或應用程式邏輯。

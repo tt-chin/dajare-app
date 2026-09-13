@@ -1,17 +1,12 @@
 # dajare_app
 
-A new Flutter project.
+給 6–12 歲兒童的日文ダジャレ（雙關語）遊戲 app。使用 Flutter + Firebase，並經由 Firebase Functions 呼叫 Gemini 進行判定。
 
-## Getting Started
+## 文件
+- 開發規則與規格依據：`AGENTS.md`
+- 產品與各項規格：`docs/`
+- 開發計畫與進度：`docs/DEVELOPMENT_PLAN.md`
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 常用檢查指令
+- Flutter：`dart format .`、`flutter analyze`、`flutter test`
+- Functions（在 `functions/` 目錄下）：`npm test`

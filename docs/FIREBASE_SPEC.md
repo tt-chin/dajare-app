@@ -1,30 +1,30 @@
-# FIREBASE_SPEC.md — Specification Freeze v1
-## Stack
-Anonymous Firebase Auth, Firestore, Functions 2nd gen, App Check. No extra Firebase products without need.
+# FIREBASE_SPEC.md — 規格凍結 v1
+## 技術組合
+Anonymous Firebase Auth、Firestore、Functions 2nd gen、App Check。沒有需要時不加入其他 Firebase 產品。
 
 ## judgeDajare
-HTTPS Callable. Validates auth/App Check/request/input/safety, calls Gemini using backend secret, parses structured output, validates score/schema, calculates `level`, applies output safety, writes trusted result, returns normalized response.
+HTTPS Callable。驗證 auth/App Check/請求/輸入/安全性，使用後端密鑰呼叫 Gemini，解析 structured output，驗證分數/schema，計算 `level`，套用輸出安全檢查，寫入可信結果，回傳正規化的回應。
 
 ## Auth
-MVP uses Anonymous Auth. Production rejects unauthenticated calls and never trusts client-supplied UID.
+MVP 使用 Anonymous Auth。正式環境拒絕未經驗證的呼叫，且不得信任用戶端提供的 UID。
 
 ## Firestore
-`users/{uid}`; `users/{uid}/dajareEntries/{entryId}`.
-Trusted judged-result fields are server-controlled. Client cannot create/update fake scores. User reads only own data. Deny by default.
+`users/{uid}`；`users/{uid}/dajareEntries/{entryId}`。
+可信的判定結果欄位由伺服器控制。用戶端不得建立/更新假分數。使用者只能讀取自己的資料。預設拒絕存取。
 
-## Secret
-Use Firebase/Google Cloud Secret Manager, e.g. `GEMINI_API_KEY`; never commit or place in Flutter/logs/issues/examples.
+## 密鑰
+使用 Firebase/Google Cloud Secret Manager，例如 `GEMINI_API_KEY`；不得 commit，也不得放在 Flutter/log/issue/範例中。
 
 ## App Check
-Before release: Android Play Integrity; iOS supported App Attest/Apple configuration. Debug provider only in development. Observe traffic before enforcement.
+發佈前：Android 使用 Play Integrity；iOS 使用支援的 App Attest/Apple 設定。Debug provider 只能在開發環境使用。啟用強制驗證（enforcement）前，應先觀察流量。
 
-Task 13 prepares Flutter providers (`debug` in debug builds, Play Integrity on Android production, App Attest with DeviceCheck fallback on Apple production). Console enforcement remains OFF until Task 14 device validation. Register local debug tokens in Firebase Console; never commit them.
+Task 13 準備 Flutter 端的 provider（debug build 使用 `debug`、Android 正式環境使用 Play Integrity、Apple 正式環境使用 App Attest 並以 DeviceCheck 作為備援）。在 Task 14 裝置驗證完成前，Console 的 enforcement 維持關閉。本機的 debug token 應在 Firebase Console 註冊；不得 commit。
 
-## Rate protection
-`judgeDajare` uses an Admin SDK Firestore transaction at `users/{uid}/rateLimits/judgeDajare`: 5-second per-UID cooldown and 100 accepted attempts per UTC day. This server-only document is denied to clients by the default rules. Validation and safety checks run before quota consumption; quota consumption runs before Gemini.
+## 頻率限制保護
+`judgeDajare` 在 `users/{uid}/rateLimits/judgeDajare` 使用 Admin SDK Firestore transaction：每個 UID 冷卻 5 秒，每個 UTC 日最多接受 100 次。這份只供伺服器使用的文件，預設的 rules 會拒絕用戶端存取。驗證與安全檢查在扣除額度之前執行；扣除額度在呼叫 Gemini 之前執行。
 
-## Errors
-`unauthenticated`, `invalid_input`, `unsafe_input`, `rate_limited`, `ai_unavailable`, `invalid_ai_response`, `internal_error`.
+## 錯誤
+`unauthenticated`、`invalid_input`、`unsafe_input`、`rate_limited`、`ai_unavailable`、`invalid_ai_response`、`internal_error`。
 
-## Privacy/logging/cost
-Minimize stored data; avoid raw prompt/response dumps and full user text in production logs by default. Add reasonable per-UID/cooldown/daily controls as needed, input limits, App Check and monitoring. Use Auth/Functions/Firestore emulators where practical.
+## 隱私/log/成本
+盡量減少儲存的資料；正式環境的 log 預設避免完整傾印原始 prompt/回應與使用者的完整文字。視需要加入合理的單一 UID/冷卻/每日限制、輸入長度限制、App Check 與監控。可行時使用 Auth/Functions/Firestore emulator。

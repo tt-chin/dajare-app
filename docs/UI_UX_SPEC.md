@@ -1,36 +1,36 @@
-# UI_UX_SPEC.md — Specification Freeze v1
-## Principles
-Game first; one obvious primary action; short easy Japanese; low cognitive load; positive low-score feedback; no unnecessary personal data; no raw AI/technical errors.
+# UI_UX_SPEC.md — 規格凍結 v1
+## 原則
+遊戲優先；只有一個明顯的主要操作；簡短易懂的日文；低認知負擔；低分時給予正向回饋；不收集不必要的個人資料；不顯示原始的 AI/技術錯誤。
 
-Touch: primary button ≥56dp; icon area ≥48dp. Use SafeArea, 16–24dp side padding, readable OS Japanese fonts, text scaling, and do not rely on color alone.
+觸控：主要按鈕 ≥56dp；圖示區域 ≥48dp。使用 SafeArea、16–24dp 左右邊距、易讀的系統日文字型、支援文字縮放，且不得只靠顏色傳達資訊。
 
-## IA
+## 資訊架構（IA）
 Home
 ├─ Input → Loading → Result → Try Again
 ├─ Daily Topic → Hint → Input/Result
 └─ Collection
-No Bottom Navigation required for MVP.
+MVP 不需要 Bottom Navigation。
 
-## Home
-`ダジャレを入力する` primary; `今日のお題`, `ダジャレ図鑑` secondary. No forced login/tutorial/settings.
+## Home（首頁）
+`ダジャレを入力する` 為主要按鈕；`今日のお題`、`ダジャレ図鑑` 為次要按鈕。不強制登入/教學/設定。
 
-## Input
-`ダジャレを入れてみよう！`; CTA `判定する！`.
-Empty: `ダジャレを入れてみてね！`; too long: `もう少し短くしてみてね！`. Prevent double submit; preserve text on retry.
+## Input（輸入）
+`ダジャレを入れてみよう！`；CTA `判定する！`。
+空白時：`ダジャレを入れてみてね！`；太長時：`もう少し短くしてみてね！`。防止重複送出；重試時保留輸入的文字。
 
-## Loading
-Progress + `ダジャレチェック中！`.
+## Loading（載入中）
+進度指示 + `ダジャレチェック中！`。
 
-## Result
-Score → reaction → character → short explanation → word pair → `もういっかい！`. No harsh failure state/red X.
+## Result（結果）
+分數 → 反應 → 角色 → 簡短說明 → 詞語組合 → `もういっかい！`。不使用嚴厲的失敗狀態/紅色 X。
 
-## Daily Topic
-One topic/category, `ダジャレを作る`, one-step `ヒントをみる`; bundled/static initially.
+## Daily Topic（今日のお題）
+一個題目/分類、`ダジャレを作る`、一步提示 `ヒントをみる`；初期先使用內建的靜態內容。
 
-## Collection
-Phrase, score/reaction, optional category/date; useful empty state.
+## Collection（図鑑）
+詞句、分數/反應，可選擇顯示分類/日期；沒有資料時要有實用的空白狀態畫面。
 
-## Errors
-Network: `ネットにつながらなかったみたい。もういちどためしてみてね！`
-AI: `うまく判定できなかったみたい。もういちどためしてみてね！`
-Unsafe: `ほかのことばでダジャレを作ってみよう！どうぶつや食べものがおすすめだよ。`
+## 錯誤
+網路：`ネットにつながらなかったみたい。もういちどためしてみてね！`
+AI：`うまく判定できなかったみたい。もういちどためしてみてね！`
+不安全：`ほかのことばでダジャレを作ってみよう！どうぶつや食べものがおすすめだよ。`
