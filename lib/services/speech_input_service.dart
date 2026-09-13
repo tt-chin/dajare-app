@@ -4,10 +4,17 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 typedef SpeechTextCallback = void Function(String text);
 
+const speechListenDuration = Duration(seconds: 10);
+const speechPauseDuration = Duration(seconds: 3);
+
+// No speech was heard before the recognizer gave up (iOS/Android codes).
+const _noSpeechErrors = {'error_no_match', 'error_speech_timeout'};
+
 abstract class SpeechInputService {
   Future<bool> initialize({
     required void Function() onListening,
     required void Function() onDone,
+    required void Function() onNoSpeech,
     required void Function() onError,
   });
 
@@ -27,22 +34,37 @@ class DeviceSpeechInputService implements SpeechInputService {
   Future<bool> initialize({
     required void Function() onListening,
     required void Function() onDone,
+    required void Function() onNoSpeech,
     required void Function() onError,
   }) async {
+    void handleStatus(String status) {
+      if (status == SpeechToText.listeningStatus) {
+        onListening();
+      } else if (status == SpeechToText.doneStatus ||
+          status == SpeechToText.notListeningStatus) {
+        onDone();
+      }
+    }
+
+    void handleError(SpeechRecognitionError error) {
+      if (_noSpeechErrors.contains(error.errorMsg)) {
+        onNoSpeech();
+      } else {
+        onError();
+      }
+    }
+
     final available = await _speechToText.initialize(
-      onStatus: (status) {
-        if (status == SpeechToText.listeningStatus) {
-          onListening();
-        } else if (status == SpeechToText.doneStatus ||
-            status == SpeechToText.notListeningStatus) {
-          onDone();
-        }
-      },
-      onError: (SpeechRecognitionError _) => onError(),
+      onStatus: handleStatus,
+      onError: handleError,
     );
     if (!available) {
       return false;
     }
+    // SpeechToText is a singleton and ignores listeners on repeat
+    // initialize calls, so rebind them to the current screen.
+    _speechToText.statusListener = handleStatus;
+    _speechToText.errorListener = handleError;
 
     final locales = await _speechToText.locales();
     for (final locale in locales) {
@@ -55,8 +77,11 @@ class DeviceSpeechInputService implements SpeechInputService {
   }
 
   @override
-  Future<void> listen({required SpeechTextCallback onResult}) {
-    return _speechToText.listen(
+  Future<void> listen({required SpeechTextCallback onResult}) async {
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+    }
+    await _speechToText.listen(
       onResult: (SpeechRecognitionResult result) {
         onResult(result.recognizedWords);
       },
@@ -64,6 +89,8 @@ class DeviceSpeechInputService implements SpeechInputService {
         localeId: _japaneseLocaleId,
         partialResults: true,
         cancelOnError: true,
+        listenFor: speechListenDuration,
+        pauseFor: speechPauseDuration,
       ),
     );
   }

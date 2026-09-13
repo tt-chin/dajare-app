@@ -73,7 +73,33 @@ void main() {
 
     expect(find.text('パンダがパンだ！'), findsOneWidget);
     expect(find.text('もとの文字'), findsNothing);
+    expect(find.byKey(const Key('speech_listening_message')), findsOneWidget);
+
+    speech.emitDone();
+    await tester.pump();
+
     expect(find.text('声を文字にしたよ！'), findsOneWidget);
+  });
+
+  testWidgets('tapping again after a partial result stops listening', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitResult('ふとんがふっとんだ');
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+
+    expect(speech.stopCalled, isTrue);
+    expect(find.byKey(const Key('speech_listening_message')), findsNothing);
+    expect(find.text('声を文字にしたよ！'), findsOneWidget);
+    expect(find.text('ふとんがふっとんだ'), findsOneWidget);
   });
 
   testWidgets('recognized speech is safely limited to 80 characters', (
@@ -94,6 +120,64 @@ void main() {
     );
     expect(field.controller!.text.length, maxDajareLength);
     expect(find.text('長かったので、短くして入れたよ！'), findsOneWidget);
+  });
+
+  testWidgets('no speech asks to try again instead of reporting the mic', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitNoSpeech();
+    await tester.pump();
+
+    expect(find.byKey(const Key('speech_no_speech_message')), findsOneWidget);
+    expect(find.byKey(const Key('speech_unavailable_message')), findsNothing);
+    expect(find.text('声で入れる'), findsOneWidget);
+  });
+
+  testWidgets('no speech after done still asks to try again', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitDone();
+    await tester.pump();
+    speech.emitNoSpeech();
+    await tester.pump();
+
+    expect(find.byKey(const Key('speech_no_speech_message')), findsOneWidget);
+    expect(find.byKey(const Key('speech_unavailable_message')), findsNothing);
+  });
+
+  testWidgets('no speech after a result keeps the recognized text', (
+    WidgetTester tester,
+  ) async {
+    final speech = FakeSpeechInputService();
+    await tester.pumpWidget(
+      MaterialApp(home: DajareInputScreen(speechInputService: speech)),
+    );
+
+    await tester.tap(find.byKey(const Key('speech_input_button')));
+    await tester.pump();
+    speech.emitResult('ふとんがふっとんだ');
+    await tester.pump();
+    speech.emitNoSpeech();
+    speech.emitDone();
+    await tester.pump();
+
+    expect(find.text('ふとんがふっとんだ'), findsOneWidget);
+    expect(find.text('声を文字にしたよ！'), findsOneWidget);
+    expect(find.byKey(const Key('speech_no_speech_message')), findsNothing);
   });
 
   testWidgets('permission denial keeps text input available', (
@@ -248,16 +332,22 @@ class FakeSpeechInputService implements SpeechInputService {
   final bool available;
   final bool errorOnListen;
   bool listenCalled = false;
+  bool stopCalled = false;
   SpeechTextCallback? _onResult;
   void Function()? _onListening;
+  void Function()? _onDone;
+  void Function()? _onNoSpeech;
 
   @override
   Future<bool> initialize({
     required void Function() onListening,
     required void Function() onDone,
+    required void Function() onNoSpeech,
     required void Function() onError,
   }) async {
     _onListening = onListening;
+    _onDone = onDone;
+    _onNoSpeech = onNoSpeech;
     return available;
   }
 
@@ -273,6 +363,12 @@ class FakeSpeechInputService implements SpeechInputService {
 
   void emitResult(String text) => _onResult?.call(text);
 
+  void emitDone() => _onDone?.call();
+
+  void emitNoSpeech() => _onNoSpeech?.call();
+
   @override
-  Future<void> stop() async {}
+  Future<void> stop() async {
+    stopCalled = true;
+  }
 }
