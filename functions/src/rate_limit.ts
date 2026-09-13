@@ -35,9 +35,11 @@ function productionDependencies(onStage: ReportStage): RateLimitDependencies {
   return {
     nowMillis: () => Date.now(),
     update: async (uid, decide) => {
+      // Labels failures before the transaction callback runs.
       onStage("quota_read");
       const reference = firestore.doc(`users/${uid}/rateLimits/judgeDajare`);
       await firestore.runTransaction(async (transaction) => {
+        // Transactions retry after quota_write, so mark each read attempt.
         onStage("quota_read");
         const snapshot = await transaction.get(reference);
         const data = snapshot.data();
