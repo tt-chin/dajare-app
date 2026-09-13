@@ -35,6 +35,7 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
   String? _requestErrorText;
   bool _isSubmitting = false;
   _SpeechInputState _speechState = _SpeechInputState.idle;
+  bool _hasSpeechText = false;
 
   @override
   void initState() {
@@ -54,13 +55,14 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     if (_speechState == _SpeechInputState.listening) {
       await _speechInputService.stop();
       if (mounted) {
-        setState(() => _speechState = _SpeechInputState.idle);
+        setState(() => _speechState = _speechStateAfterListening);
       }
       return;
     }
 
     setState(() {
       _speechState = _SpeechInputState.initializing;
+      _hasSpeechText = false;
       _requestErrorText = null;
     });
 
@@ -73,7 +75,15 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
         },
         onDone: () {
           if (mounted && _speechState == _SpeechInputState.listening) {
-            setState(() => _speechState = _SpeechInputState.idle);
+            setState(() => _speechState = _speechStateAfterListening);
+          }
+        },
+        onNoSpeech: () {
+          if (mounted &&
+              !_hasSpeechText &&
+              (_speechState == _SpeechInputState.listening ||
+                  _speechState == _SpeechInputState.idle)) {
+            setState(() => _speechState = _SpeechInputState.noSpeech);
           }
         },
         onError: _showSpeechFallback,
@@ -107,9 +117,17 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
         selection: TextSelection.collapsed(offset: safelyLimited.length),
       );
       _errorText = text.length > maxDajareLength ? '長かったので、短くして入れたよ！' : null;
-      _speechState = _SpeechInputState.recognized;
+      _hasSpeechText = true;
+      // Stay in listening until the recognizer reports done so the user can
+      // still stop it; a late final result after stopping marks it recognized.
+      if (_speechState != _SpeechInputState.listening) {
+        _speechState = _SpeechInputState.recognized;
+      }
     });
   }
+
+  _SpeechInputState get _speechStateAfterListening =>
+      _hasSpeechText ? _SpeechInputState.recognized : _SpeechInputState.idle;
 
   void _showSpeechFallback() {
     if (!mounted) {
@@ -292,6 +310,14 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
                         const SizedBox(height: 8),
                         const Text('声を文字にしたよ！', textAlign: TextAlign.center),
                       ],
+                      if (_speechState == _SpeechInputState.noSpeech) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'きこえなかったよ。もういちど話してね！',
+                          key: Key('speech_no_speech_message'),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                       if (_speechState == _SpeechInputState.unavailable) ...[
                         const SizedBox(height: 8),
                         Text(
@@ -343,5 +369,6 @@ enum _SpeechInputState {
   initializing,
   listening,
   recognized,
+  noSpeech,
   unavailable,
 }
