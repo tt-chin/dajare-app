@@ -19,4 +19,11 @@ Codex implements one task at a time and stops for review.
 
 Milestones: A=01–03; B=04–08; C=09–11; D=12–14; E=15.
 
+## Task 14 progress
+- iOS simulator (iPhone 17 Pro, iOS 26.5, Xcode 26.6): builds, launches, reaches Home (Firebase init + App Check + Anonymous Auth pass).
+- Build fixes: iOS deployment target 13.0 → 15.0 (Firebase plugins require 15.0); `cloud_functions` 6.3.6 → 6.4.0 (6.3.6 + `firebase_core` 4.14.0 fail Swift compile: redundant `FlutterError: Error`); `GoogleService-Info.plist` added to Runner target resources (was not bundled).
+- Local setup note: stale CocoaPods CDN index needs `pod repo update`.
+- Keep FlutterFire plugins upgraded together; mismatched native versions break the iOS build.
+- Not yet verified: `judgeDajare` end-to-end on iOS, speech input, physical device, Android (no Android SDK locally), TestFlight path.
+
 When asked `Task XX`, read relevant specs, inspect repo, implement only XX, run checks, report changed files/commands/results/manual steps, then stop.
