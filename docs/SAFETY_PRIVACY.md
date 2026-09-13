@@ -1,23 +1,23 @@
-# SAFETY_PRIVACY.md — Specification Freeze v1
-Child safety/privacy are product requirements.
+# SAFETY_PRIVACY.md — 規格凍結 v1
+兒童安全與隱私是產品必須遵守的要求。
 
-## Data
-Do not require real name, school, address, birthday, email, phone, or public profile. MVP uses Anonymous Auth. Store only gameplay/collection data needed for the feature; avoid unnecessary device IDs and permanent raw AI dumps.
+## 資料
+不得要求真實姓名、學校、地址、生日、email、電話或公開個人檔案。MVP 使用 Anonymous Auth。只儲存功能需要的遊玩/図鑑資料；避免不必要的裝置 ID 與永久保存的原始 AI 輸出。
 
-## Social
-No public chat, messaging, friends, public posting/ranking, social feed, or photo upload. Any future addition requires separate safety/privacy review.
+## 社群
+不提供公開聊天、訊息、好友、公開貼文/排行榜、社群動態或照片上傳。未來若要加入任何一項，必須另外進行安全/隱私審查。
 
 ## AI
-Do not generate/expand adult/sexual content, graphic violence, self-harm, hate, dangerous instructions, bullying, frightening age-inappropriate content, or personal-data requests. Unsafe input is redirected, not repeated/expanded.
+不得生成或延伸成人/性內容、血腥暴力、自我傷害、仇恨、危險指示、霸凌、令人害怕且不適合年齡的內容，或索取個人資料。不安全的輸入應引導到其他方向，不得重複或延伸。
 
-## UX/backend
-No shaming or harsh failure language. Never expose prompts, stack traces, Firebase IDs, provider errors, or secrets. Treat Flutter as untrusted; validate auth/App Check/input/output/ownership server-side.
+## UX/後端
+不得使用羞辱或嚴厲的失敗用語。不得暴露 prompt、stack trace、Firebase ID、服務供應商的錯誤或密鑰。應將 Flutter 視為不可信任；auth/App Check/輸入/輸出/擁有權都要在伺服器端驗證。
 
-## Logging/retention
-Never log secrets/tokens. Avoid full child input by default. Before release define deletion for saved user-created content and operational-log retention.
+## Log/保存期限
+不得在 log 中記錄密鑰/token。預設避免記錄兒童輸入的完整內容。發佈前應定義使用者建立內容的刪除方式與營運 log 的保存期限。
 
-## Analytics/ads
-Do not add analytics, ads, tracking, attribution, or third-party SDKs by default; each requires child/privacy review and disclosure updates.
+## 分析/廣告
+預設不得加入分析、廣告、追蹤、歸因或第三方 SDK；每一項都需要經過兒童/隱私審查並更新揭露內容。
 
-## Release gate
-Re-check current Apple/Google child/privacy requirements and applicable target-market law before release. Privacy disclosures must match actual behavior.
+## 發佈關卡
+發佈前應重新確認當下 Apple/Google 的兒童/隱私要求，以及目標市場適用的法律。隱私揭露必須與實際行為一致。
