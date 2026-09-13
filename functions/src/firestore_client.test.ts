@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {deleteApp, getApp, initializeApp} from "firebase-admin/app";
+import {deleteApp, getApp, getApps, initializeApp} from "firebase-admin/app";
 import {getDefaultFirestore} from "./firestore_client";
 import {JudgeStage, safeDiagnostics} from "./diagnostics";
 
@@ -16,8 +16,8 @@ test("initializes default app even when the Functions SDK has a named app", asyn
     assert.equal(getApp(named.name), named);
     assert.deepEqual(stages, ["admin_app_init", "firestore_client_init"]);
   } finally {
-    await deleteApp(named);
-    await deleteApp(getApp());
+    // Delete whatever apps exist so cleanup cannot mask the original failure.
+    await Promise.all(getApps().map((app) => deleteApp(app)));
   }
 });
 
