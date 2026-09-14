@@ -25,7 +25,10 @@ Codex 一次只實作一個任務，完成後停下來等待審查。
 - 本機環境：CocoaPods CDN 索引過舊時，需要先執行 `pod repo update`。
 - FlutterFire plugins 應一起升級；原生版本不一致會讓 iOS build 失敗。
 - 實機 iPhone（iPhone 13 mini、iOS 26.6.1、USB）：使用 `DEVELOPMENT_TEAM` N75N3Q3M5J 簽章，可 build、安裝、啟動。
-- App Check：裝置 log 出現 403 `Firebase App Check API has not been used in project 416889139850 before or it is disabled`。`judgeDajare` 設定為 `enforceAppCheck: false`（`functions/src/index.ts`），因此呼叫不會被擋。啟用 enforcement 前，還需要啟用該 API 並註冊 debug token（不得 commit）。
+- App Check：裝置 log 原本出現 403 `Firebase App Check API has not been used in project 416889139850 before or it is disabled`。目前 API 已啟用；iPhone 13 mini debug build 的 debug token 已在 Firebase Console 註冊（token 不得 commit）。註冊後重新啟動 app，log 中沒有 403/attestation 錯誤，判定流程正常。
+  - debug token 會印在 `flutter run` 的輸出中；同一次安裝會沿用同一個 token，刪除重裝後會產生新的 token，需要重新註冊。
+  - 已確認（tt-chin 查看 `judgeDajare` log）：App Check VALID、Anonymous Auth VALID、Callable request verification passed。
+  - `judgeDajare` 仍是 `enforceAppCheck: false`（`functions/src/index.ts`）。改成 `true` 之前，要確認 release/TestFlight build 的 App Attest provider 已設定，其他開發者的 debug build 也要各自註冊 debug token。
 - 實機 iPhone：`judgeDajare` 完整流程正常（有顯示分數/反應/評語/詞語組合）。
 - 判定成功後図鑑為空：已解決。Functions SDK 已有具名 app 時，Admin SDK 的 default app 從未被建立，導致 `getFirestore()` 失敗，存檔錯誤又被 `onSaveFailure` 吞掉。已在 `067125f` 修正（`functions/src/firestore_client.ts` 的 `getDefaultFirestore`，`rate_limit.ts` 也改用它，並加入安全的診斷 log）；已部署並在 iPhone 上驗證（新的判定會出現在図鑑）。部署前判定的紀錄從未被儲存。
 - 範圍決定：只驗證 iOS；Android 驗證目前不在範圍內。
