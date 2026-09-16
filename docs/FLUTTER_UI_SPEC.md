@@ -24,3 +24,10 @@ Flutter 負責反應的視覺呈現、素材、動畫、顏色、widget、導覽
 
 ## 檢查
 `dart format .`、`flutter analyze`、`flutter test`。
+
+## Post-Task 14：Result Animation & Sound
+- 判定等待中使用已選角色的 normal PNG，以 Flutter AnimationController 約 3 秒循環；依真正的請求完成時間結束，不延遲 AI 回應。
+- Result 使用既有 level → reaction 對應，約 700ms 的輕微 scale/bounce 後顯示完整結果。系統要求減少動畫時直接顯示。
+- 一般設定畫面提供サウンド ON/OFF，沿用 shared_preferences 本地保存（`sound_enabled`，預設 OFF）；啟動時角色選擇流程不變。
+- BGM/SE 使用 audioplayers 播放本機素材；結果音效前停止 BGM，離開畫面或進入背景停止播放。判定中返回前景可恢復 BGM，結果 SE 不因返回前景重播。
+- 音源可省略，缺少或播放失敗不影響判定。檔名與加入方式見 `assets/audio/README.md`；不得使用授權不明音源。

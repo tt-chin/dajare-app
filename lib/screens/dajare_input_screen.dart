@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/dajare_result.dart';
+import '../models/character_presentation.dart';
+import '../widgets/character_performance.dart';
 import '../services/dajare_service.dart';
 import '../services/speech_input_service.dart';
 import '../widgets/primary_action_button.dart';
@@ -137,6 +139,7 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
   }
 
   Future<void> _judgeDajare() async {
+    if (_isSubmitting) return;
     final text = _controller.text.trim();
 
     if (text.isEmpty) {
@@ -161,6 +164,7 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
       _requestErrorText = null;
       _isSubmitting = true;
     });
+    unawaited(_speechInputService.stop());
 
     try {
       final judgeDajare =
@@ -197,168 +201,194 @@ class _DajareInputScreenState extends State<DajareInputScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('ダジャレを入力する')),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
+        child: _isSubmitting
+            ? const Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.all(24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'ダジャレを入れてみよう！',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                      CharacterPerformance(
+                        reaction: CharacterReaction.normal,
+                        imageKey: Key('judging_character_asset'),
                       ),
-                      if (widget.topicWord != null) ...[
-                        const SizedBox(height: 16),
-                        Card(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.secondaryContainer,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              '今日のお題：${widget.topicWord}',
-                              key: const Key('input_topic_word'),
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 24),
-                      TextField(
-                        key: const Key('dajare_input'),
-                        controller: _controller,
-                        enabled: !_isSubmitting,
-                        maxLength: maxDajareLength,
-                        maxLengthEnforcement: MaxLengthEnforcement.none,
-                        maxLines: 4,
-                        minLines: 2,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          hintText: '例：パンダがパンだ！',
-                          errorText: _errorText,
-                          filled: true,
-                          fillColor: Theme.of(context).colorScheme.surface,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onSubmitted: (_) {
-                          if (!_isSubmitting) {
-                            _judgeDajare();
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      Semantics(
-                        button: true,
-                        label: _speechState == _SpeechInputState.listening
-                            ? '音声入力を止める'
-                            : '声でダジャレを入力する',
-                        child: SizedBox(
-                          height: 56,
-                          child: OutlinedButton.icon(
-                            key: const Key('speech_input_button'),
-                            onPressed:
-                                _isSubmitting ||
-                                    _speechState ==
-                                        _SpeechInputState.initializing
-                                ? null
-                                : _toggleSpeechInput,
-                            icon: _speechState == _SpeechInputState.initializing
-                                ? const SizedBox.square(
-                                    dimension: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Icon(
-                                    _speechState == _SpeechInputState.listening
-                                        ? Icons.stop_circle_rounded
-                                        : Icons.mic_rounded,
-                                  ),
-                            label: Text(
-                              _speechState == _SpeechInputState.listening
-                                  ? 'おわる'
-                                  : '声で入れる',
-                            ),
-                          ),
-                        ),
-                      ),
-                      if (_speechState == _SpeechInputState.initializing) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'マイクをじゅんびしているよ…',
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      if (_speechState == _SpeechInputState.listening) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'きいているよ！ ダジャレを話してね！',
-                          key: Key('speech_listening_message'),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      if (_speechState == _SpeechInputState.recognized) ...[
-                        const SizedBox(height: 8),
-                        const Text('声を文字にしたよ！', textAlign: TextAlign.center),
-                      ],
-                      if (_speechState == _SpeechInputState.noSpeech) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'きこえなかったよ。もういちど話してね！',
-                          key: Key('speech_no_speech_message'),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                      if (_speechState == _SpeechInputState.unavailable) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'マイクがつかえないみたい。\n文字でダジャレを入れてみてね！',
-                          key: const Key('speech_unavailable_message'),
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 16),
-                      PrimaryActionButton(
-                        key: const Key('judge_button'),
-                        label: '判定する！',
-                        icon: Icons.auto_awesome_rounded,
-                        onPressed: _isSubmitting ? null : _judgeDajare,
-                      ),
-                      if (_isSubmitting) ...[
-                        const SizedBox(height: 32),
-                        const Center(child: CircularProgressIndicator()),
-                        const SizedBox(height: 12),
-                        const Text('ダジャレチェック中！', textAlign: TextAlign.center),
-                      ],
-                      if (_requestErrorText != null) ...[
-                        const SizedBox(height: 24),
-                        Text(
-                          _requestErrorText!,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                      ],
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text('ダジャレチェック中！', textAlign: TextAlign.center),
                     ],
                   ),
                 ),
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 480),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'ダジャレを入れてみよう！',
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            if (widget.topicWord != null) ...[
+                              const SizedBox(height: 16),
+                              Card(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondaryContainer,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Text(
+                                    '今日のお題：${widget.topicWord}',
+                                    key: const Key('input_topic_word'),
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            TextField(
+                              key: const Key('dajare_input'),
+                              controller: _controller,
+                              enabled: !_isSubmitting,
+                              maxLength: maxDajareLength,
+                              maxLengthEnforcement: MaxLengthEnforcement.none,
+                              maxLines: 4,
+                              minLines: 2,
+                              textInputAction: TextInputAction.done,
+                              decoration: InputDecoration(
+                                hintText: '例：パンダがパンだ！',
+                                errorText: _errorText,
+                                filled: true,
+                                fillColor: Theme.of(
+                                  context,
+                                ).colorScheme.surface,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              onSubmitted: (_) {
+                                if (!_isSubmitting) {
+                                  _judgeDajare();
+                                }
+                              },
+                            ),
+                            const SizedBox(height: 12),
+                            Semantics(
+                              button: true,
+                              label: _speechState == _SpeechInputState.listening
+                                  ? '音声入力を止める'
+                                  : '声でダジャレを入力する',
+                              child: SizedBox(
+                                height: 56,
+                                child: OutlinedButton.icon(
+                                  key: const Key('speech_input_button'),
+                                  onPressed:
+                                      _isSubmitting ||
+                                          _speechState ==
+                                              _SpeechInputState.initializing
+                                      ? null
+                                      : _toggleSpeechInput,
+                                  icon:
+                                      _speechState ==
+                                          _SpeechInputState.initializing
+                                      ? const SizedBox.square(
+                                          dimension: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : Icon(
+                                          _speechState ==
+                                                  _SpeechInputState.listening
+                                              ? Icons.stop_circle_rounded
+                                              : Icons.mic_rounded,
+                                        ),
+                                  label: Text(
+                                    _speechState == _SpeechInputState.listening
+                                        ? 'おわる'
+                                        : '声で入れる',
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (_speechState ==
+                                _SpeechInputState.initializing) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                'マイクをじゅんびしているよ…',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_speechState ==
+                                _SpeechInputState.listening) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                'きいているよ！ ダジャレを話してね！',
+                                key: Key('speech_listening_message'),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_speechState ==
+                                _SpeechInputState.recognized) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                '声を文字にしたよ！',
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_speechState == _SpeechInputState.noSpeech) ...[
+                              const SizedBox(height: 8),
+                              const Text(
+                                'きこえなかったよ。もういちど話してね！',
+                                key: Key('speech_no_speech_message'),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                            if (_speechState ==
+                                _SpeechInputState.unavailable) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                'マイクがつかえないみたい。\n文字でダジャレを入れてみてね！',
+                                key: const Key('speech_unavailable_message'),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 16),
+                            PrimaryActionButton(
+                              key: const Key('judge_button'),
+                              label: '判定する！',
+                              icon: Icons.auto_awesome_rounded,
+                              onPressed: _isSubmitting ? null : _judgeDajare,
+                            ),
+                            if (_requestErrorText != null) ...[
+                              const SizedBox(height: 24),
+                              Text(
+                                _requestErrorText!,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }

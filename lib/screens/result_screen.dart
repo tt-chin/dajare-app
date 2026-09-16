@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../models/character_presentation.dart';
-import '../widgets/selected_character.dart';
+import '../widgets/character_performance.dart';
 import '../models/dajare_result.dart';
 import '../widgets/primary_action_button.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   const ResultScreen({super.key, required this.result, this.onTryAgain});
 
   final DajareResult result;
   final VoidCallback? onTryAgain;
+
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
+  bool _ready = false;
+  DajareResult get result => widget.result;
 
   @override
   Widget build(BuildContext context) {
@@ -26,51 +34,67 @@ class ResultScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    '${result.score}点',
-                    key: const Key('result_score'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                  Visibility(
+                    visible: _ready,
+                    maintainState: true,
+                    maintainAnimation: true,
+                    maintainSize: true,
+                    child: Text(
+                      '${result.score}点',
+                      key: const Key('result_score'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    CharacterPresentation.reactionLabel(reaction),
-                    key: const Key('result_reaction'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Visibility(
+                    visible: _ready,
+                    maintainState: true,
+                    maintainAnimation: true,
+                    maintainSize: true,
+                    child: Text(
+                      CharacterPresentation.reactionLabel(reaction),
+                      key: const Key('result_reaction'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 20),
-                  SelectedCharacter(
+                  CharacterPerformance(
                     reaction: reaction,
-                    height: 180,
                     imageKey: const Key('result_character_asset'),
+                    onFinished: () => setState(() => _ready = true),
                   ),
-                  const SizedBox(height: 24),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Text(
-                        result.comment,
-                        key: const Key('result_comment'),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleMedium,
+                  if (_ready) ...[
+                    const SizedBox(height: 24),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(
+                          result.comment,
+                          key: const Key('result_comment'),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _WordPair(word1: result.word1, word2: result.word2),
-                  const SizedBox(height: 32),
-                  PrimaryActionButton(
-                    key: const Key('try_again_button'),
-                    label: 'もういっかい！',
-                    icon: Icons.replay_rounded,
-                    onPressed: onTryAgain ?? () => Navigator.of(context).pop(),
-                  ),
+                    const SizedBox(height: 20),
+                    _WordPair(word1: result.word1, word2: result.word2),
+                    const SizedBox(height: 32),
+                    PrimaryActionButton(
+                      key: const Key('try_again_button'),
+                      label: 'もういっかい！',
+                      icon: Icons.replay_rounded,
+                      onPressed:
+                          widget.onTryAgain ??
+                          () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ],
               ),
             ),

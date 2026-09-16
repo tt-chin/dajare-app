@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'screens/settings_screen.dart';
 import 'services/character_settings.dart';
+import 'services/sound_settings.dart';
 import 'services/anonymous_auth_service.dart';
 import 'services/app_check_service.dart';
 import 'services/firebase_initializer.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   }
 
   await CharacterSettings.instance.load();
+  await SoundSettings.instance.load();
   runApp(const DajareApp());
 }
 

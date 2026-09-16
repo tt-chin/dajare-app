@@ -3,9 +3,16 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import '../models/character_presentation.dart';
 import '../services/character_settings.dart';
+import '../services/sound_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, this.settings, this.isStartup = false});
+  const SettingsScreen({
+    super.key,
+    this.settings,
+    this.isStartup = false,
+    this.soundSettings,
+  });
+  final SoundSettings? soundSettings;
   final CharacterSettings? settings;
   final bool isStartup;
   @override
@@ -62,6 +69,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (!widget.isStartup)
+                  ValueListenableBuilder<bool>(
+                    valueListenable:
+                        (widget.soundSettings ?? SoundSettings.instance)
+                            .enabled,
+                    builder: (context, enabled, _) => SwitchListTile(
+                      key: const Key('sound_switch'),
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('サウンド'),
+                      subtitle: Text(enabled ? 'ON' : 'OFF'),
+                      value: enabled,
+                      onChanged: (value) async {
+                        try {
+                          await (widget.soundSettings ?? SoundSettings.instance)
+                              .setEnabled(value);
+                        } catch (_) {
+                          if (mounted) {
+                            setState(() => _error = 'サウンドのせっていを保存できなかったよ。');
+                          }
+                        }
+                      },
+                    ),
+                  ),
                 Text(
                   'いっしょにあそぶキャラクター',
                   style: Theme.of(context).textTheme.titleLarge,

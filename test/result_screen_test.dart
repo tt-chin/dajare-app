@@ -22,6 +22,8 @@ void main() {
       ),
     );
 
+    expect(find.byKey(const Key('result_comment')), findsNothing);
+    await tester.pumpAndSettle();
     expect(find.text('92点'), findsOneWidget);
     expect(find.text('天才！🤩'), findsOneWidget);
     expect(find.byKey(const Key('result_character_asset')), findsOneWidget);
@@ -56,6 +58,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     expect(find.text('さむ～い！🥶'), findsOneWidget);
     expect(find.textContaining('もうひとひねりしてみよう！'), findsOneWidget);
     expect(find.textContaining('不正解'), findsNothing);
