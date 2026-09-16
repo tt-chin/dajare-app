@@ -36,6 +36,7 @@ dependencies:
   flutter:
     sdk: flutter
   speech_to_text: ^7.4.0
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_launcher_icons: ^0.14.4

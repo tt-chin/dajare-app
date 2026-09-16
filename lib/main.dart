@@ -2,7 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/settings_screen.dart';
+import 'services/character_settings.dart';
 import 'services/anonymous_auth_service.dart';
 import 'services/app_check_service.dart';
 import 'services/firebase_initializer.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
     return;
   }
 
+  await CharacterSettings.instance.load();
   runApp(const DajareApp());
 }
 
@@ -47,7 +49,8 @@ class FirebaseInitializationErrorApp extends StatelessWidget {
 }
 
 class DajareApp extends StatelessWidget {
-  const DajareApp({super.key});
+  const DajareApp({super.key, this.characterSettings});
+  final CharacterSettings? characterSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +62,7 @@ class DajareApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFFFFF8E8),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: SettingsScreen(isStartup: true, settings: characterSettings),
     );
   }
 }

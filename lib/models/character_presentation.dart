@@ -5,9 +5,6 @@ enum CharacterReaction { normal, cold, good, laugh, genius, legend }
 class CharacterPresentation {
   const CharacterPresentation._();
 
-  static const CharacterId resultCharacter = CharacterId.characterA;
-  static const CharacterId homeCharacter = CharacterId.characterA;
-
   static const Map<CharacterId, Map<CharacterReaction, String>> assetPaths = {
     CharacterId.characterA: {
       CharacterReaction.normal: 'assets/characters/character_a/normal.png',

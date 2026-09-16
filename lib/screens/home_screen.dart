@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/character_presentation.dart';
+import '../widgets/selected_character.dart';
+import 'settings_screen.dart';
 import 'collection_screen.dart';
 import 'daily_topic_screen.dart';
 import 'dajare_input_screen.dart';
@@ -70,15 +72,22 @@ class HomeScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Image.asset(
-                          CharacterPresentation.assetPath(
-                            CharacterPresentation.homeCharacter,
-                            CharacterReaction.normal,
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: IconButton(
+                            tooltip: 'せってい',
+                            icon: const Icon(Icons.settings_outlined),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const SettingsScreen(),
+                              ),
+                            ),
                           ),
-                          key: const Key('home_character_asset'),
+                        ),
+                        const SelectedCharacter(
+                          reaction: CharacterReaction.normal,
+                          imageKey: Key('home_character_asset'),
                           height: 144,
-                          fit: BoxFit.contain,
-                          semanticLabel: 'ダジャレを応援するキャラクター',
                         ),
                         const SizedBox(height: 16),
                         Text(

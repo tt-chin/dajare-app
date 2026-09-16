@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dajare_app/main.dart';
+import 'package:dajare_app/screens/home_screen.dart';
 import 'package:dajare_app/models/dajare_result.dart';
 import 'package:dajare_app/screens/dajare_input_screen.dart';
 import 'package:dajare_app/services/dajare_service.dart';
@@ -18,7 +19,7 @@ void main() {
   });
 
   testWidgets('shows the home actions', (WidgetTester tester) async {
-    await tester.pumpWidget(const DajareApp());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
     expect(find.text('ダジャレアプリ'), findsOneWidget);
     expect(find.byKey(const Key('home_character_asset')), findsOneWidget);
@@ -30,7 +31,7 @@ void main() {
   testWidgets('opens the dajare input screen from Home', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const DajareApp());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
     await tester.tap(find.text('ダジャレを入力する'));
     await tester.pumpAndSettle();
@@ -212,7 +213,7 @@ void main() {
   });
 
   testWidgets('opens today topic from Home', (WidgetTester tester) async {
-    await tester.pumpWidget(const DajareApp());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
     await tester.tap(find.text('今日のお題'));
     await tester.pumpAndSettle();
@@ -225,7 +226,7 @@ void main() {
   });
 
   testWidgets('rejects empty input', (WidgetTester tester) async {
-    await tester.pumpWidget(const DajareApp());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
     await tester.tap(find.text('ダジャレを入力する'));
     await tester.pumpAndSettle();
 
@@ -311,7 +312,7 @@ void main() {
   testWidgets('rejects input over the maximum length', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const DajareApp());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
     await tester.tap(find.text('ダジャレを入力する'));
     await tester.pumpAndSettle();
 

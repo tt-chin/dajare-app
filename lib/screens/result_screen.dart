@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/character_presentation.dart';
+import '../widgets/selected_character.dart';
 import '../models/dajare_result.dart';
 import '../widgets/primary_action_button.dart';
 
@@ -13,7 +14,6 @@ class ResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reaction = CharacterPresentation.reactionForLevel(result.level);
-    final character = CharacterPresentation.resultCharacter;
 
     return Scaffold(
       appBar: AppBar(title: const Text('判定結果')),
@@ -45,7 +45,11 @@ class ResultScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _CharacterView(character: character, reaction: reaction),
+                  SelectedCharacter(
+                    reaction: reaction,
+                    height: 180,
+                    imageKey: const Key('result_character_asset'),
+                  ),
                   const SizedBox(height: 24),
                   Card(
                     child: Padding(
@@ -73,24 +77,6 @@ class ResultScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _CharacterView extends StatelessWidget {
-  const _CharacterView({required this.character, required this.reaction});
-
-  final CharacterId character;
-  final CharacterReaction reaction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      CharacterPresentation.assetPath(character, reaction),
-      key: const Key('result_character_asset'),
-      height: 180,
-      fit: BoxFit.contain,
-      semanticLabel: 'ダジャレを応援するキャラクター',
     );
   }
 }
