@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../models/character_presentation.dart';
 import '../services/judging_sound.dart';
@@ -43,7 +42,7 @@ class _CharacterPerformanceState extends State<CharacterPerformance>
     final lifecycle = WidgetsBinding.instance.lifecycleState;
     _active = lifecycle == null || lifecycle == AppLifecycleState.resumed;
     WidgetsBinding.instance.addObserver(this);
-    _settings.enabled.addListener(_updateSound);
+    _settings.enabled.addListener(_onSoundSettingChanged);
     _controller = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: _judging ? 3000 : 700),
@@ -85,6 +84,15 @@ class _CharacterPerformanceState extends State<CharacterPerformance>
     }
   }
 
+  void _onSoundSettingChanged() {
+    if (_judging) {
+      _updateSound();
+    } else {
+      // Toggling ON on a result resumes ordinary BGM, not a stale result SE.
+      unawaited(_sound.stop(_owner));
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _active = state == AppLifecycleState.resumed;
@@ -94,7 +102,7 @@ class _CharacterPerformanceState extends State<CharacterPerformance>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _settings.enabled.removeListener(_updateSound);
+    _settings.enabled.removeListener(_onSoundSettingChanged);
     unawaited(_sound.stop(_owner));
     _controller.dispose();
     super.dispose();
@@ -115,20 +123,34 @@ class _CharacterPerformanceState extends State<CharacterPerformance>
         final t = MediaQuery.disableAnimationsOf(context)
             ? 1.0
             : _controller.value;
-        final wave = math.sin(t * math.pi * 2);
-        return Transform.translate(
-          offset: _judging
-              ? Offset(12 * wave, -8 * math.sin(t * math.pi * 4).abs())
-              : Offset.zero,
-          child: Transform.rotate(
-            angle: _judging ? wave * .06 : 0,
-            child: Transform.scale(
-              scale: _judging
-                  ? 1 + .025 * wave
-                  : .88 + .12 * Curves.easeOutBack.transform(t),
-              child: child,
+        if (_judging) {
+          final frame = MediaQuery.disableAnimationsOf(context)
+              ? 0
+              : (t * CharacterPresentation.judgingFrameCount).floor() %
+                    CharacterPresentation.judgingFrameCount;
+          return ValueListenableBuilder<CharacterId>(
+            valueListenable:
+                (widget.characterSettings ?? CharacterSettings.instance)
+                    .selected,
+            builder: (context, character, _) => Image.asset(
+              CharacterPresentation.judgingFramePath(character, frame),
+              key: widget.imageKey,
+              height: 180,
+              fit: BoxFit.contain,
+              gaplessPlayback: true,
+              semanticLabel: 'ダジャレを考えているキャラクター',
+              errorBuilder: (_, error, stack) => SelectedCharacter(
+                reaction: CharacterReaction.normal,
+                height: 180,
+                imageKey: const Key('judging_character_fallback'),
+                settings: widget.characterSettings,
+              ),
             ),
-          ),
+          );
+        }
+        return Transform.scale(
+          scale: .88 + .12 * Curves.easeOutBack.transform(t),
+          child: child,
         );
       },
     ),

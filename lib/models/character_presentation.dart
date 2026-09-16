@@ -5,6 +5,17 @@ enum CharacterReaction { normal, cold, good, laugh, genius, legend }
 class CharacterPresentation {
   const CharacterPresentation._();
 
+  static const judgingFrameCount = 24;
+  static const judgingFps = 8;
+  static String judgingFramePath(CharacterId character, int frame) {
+    RangeError.checkValueInInterval(frame, 0, judgingFrameCount - 1, 'frame');
+    final directory = switch (character) {
+      CharacterId.characterA => 'character_a',
+      CharacterId.characterB => 'character_b',
+    };
+    return 'assets/animations/$directory/judging/frame_${frame.toString().padLeft(2, '0')}.png';
+  }
+
   static const Map<CharacterId, Map<CharacterReaction, String>> assetPaths = {
     CharacterId.characterA: {
       CharacterReaction.normal: 'assets/characters/character_a/normal.png',

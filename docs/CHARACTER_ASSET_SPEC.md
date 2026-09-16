@@ -68,3 +68,6 @@ Home 可以使用 `normal`。Result 使用依分數對應的反應素材。早�
 **Character Asset Freeze v1: APPROVED**（角色素材凍結 v1：已核准）
 
 已核准的組合：Character A 與 Character B × `normal/cold/good/laugh/genius/legend`。
+
+## Post-Task 14：正式判定等待 sequence
+使用使用者提供的 `character_a_judging_optimized.zip` 與 `character_b_judging_optimized.zip` 原始 PNG，不加工、不重新生成。路徑為 `assets/animations/{character_a|character_b}/judging/frame_00.png`～`frame_23.png`。每組 24 張 416×560 RGBA，8 FPS，3 秒正向循環。此素材只用於等待，原有 reaction PNG 與 level 對應維持不變。

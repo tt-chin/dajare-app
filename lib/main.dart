@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'screens/settings_screen.dart';
 import 'services/character_settings.dart';
 import 'services/sound_settings.dart';
+import 'widgets/background_music.dart';
 import 'services/anonymous_auth_service.dart';
 import 'services/app_check_service.dart';
 import 'services/firebase_initializer.dart';
@@ -58,6 +59,7 @@ class DajareApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ダジャレアプリ',
+      builder: (context, child) => BackgroundMusic(child: child!),
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),

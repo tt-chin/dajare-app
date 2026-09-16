@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dajare_app/models/character_presentation.dart';
 import 'package:dajare_app/models/dajare_result.dart';
@@ -17,6 +18,51 @@ const result = DajareResult(
 );
 
 void main() {
+  testWidgets('8 FPS advances 00 through 23 and loops; dispose stops ticker', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: CharacterPerformance(
+          reaction: CharacterReaction.normal,
+          imageKey: Key('frame'),
+        ),
+      ),
+    );
+    String path() =>
+        (tester.widget<Image>(find.byKey(const Key('frame'))).image
+                as AssetImage)
+            .assetName;
+    expect(path(), endsWith('frame_00.png'));
+    for (var frame = 1; frame < 24; frame++) {
+      await tester.pump(const Duration(milliseconds: 125));
+      expect(path(), endsWith('frame_${frame.toString().padLeft(2, '0')}.png'));
+    }
+    await tester.pump(const Duration(milliseconds: 125));
+    expect(path(), endsWith('frame_00.png'));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 4));
+    expect(tester.takeException(), isNull);
+    expect(tester.binding.transientCallbackCount, 0);
+  });
+
+  testWidgets('failed sequence frame falls back to normal PNG', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DefaultAssetBundle(
+          bundle: MissingFrames(),
+          child: const CharacterPerformance(
+            reaction: CharacterReaction.normal,
+            imageKey: Key('frame'),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+    expect(find.byKey(const Key('judging_character_fallback')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('both characters dance and use every existing reaction asset', (
     tester,
   ) async {
@@ -40,7 +86,9 @@ void main() {
           (tester.widget<Image>(find.byKey(const Key('image'))).image
                   as AssetImage)
               .assetName,
-          CharacterPresentation.assetPath(character, reaction),
+          reaction == CharacterReaction.normal
+              ? CharacterPresentation.judgingFramePath(character, 0)
+              : CharacterPresentation.assetPath(character, reaction),
         );
         await tester.pump(const Duration(milliseconds: 750));
         expect(finished, reaction == CharacterReaction.normal ? 0 : 1);
@@ -122,4 +170,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(finished, 1);
   });
+}
+
+class MissingFrames extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) {
+    if (key.startsWith('assets/animations/')) throw StateError('missing frame');
+    return rootBundle.load(key);
+  }
 }

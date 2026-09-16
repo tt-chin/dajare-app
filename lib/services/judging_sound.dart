@@ -34,6 +34,8 @@ class JudgingSound {
   final Future<bool> Function(String) _exists;
   Future<void> _pending = Future.value();
   Object? _owner;
+  Object? _backgroundOwner;
+  bool _backgroundEnabled = false;
   int _revision = 0;
 
   static Future<bool> _assetExists(String path) async =>
@@ -48,21 +50,44 @@ class JudgingSound {
 
   Future<void> play(Object owner, CharacterReaction reaction) {
     _owner = owner;
+    return _playAsset(assetFor(reaction), reaction == CharacterReaction.normal);
+  }
+
+  // One application-level background request; judging/result takes priority.
+  Future<void> background(Object owner, bool enabled) {
+    _backgroundOwner = owner;
+    _backgroundEnabled = enabled;
+    if (_owner != null) return Future.value();
+    return _playAsset(enabled ? 'assets/audio/background.mp3' : null, true);
+  }
+
+  Future<void> removeBackground(Object owner) {
+    if (!identical(owner, _backgroundOwner)) return Future.value();
+    _backgroundOwner = null;
+    _backgroundEnabled = false;
+    if (_owner != null) return Future.value();
+    return _playAsset(null, false);
+  }
+
+  Future<void> _playAsset(String? asset, bool loop) {
     final revision = ++_revision;
     return _enqueue(() async {
       await _output.stop();
-      final asset = assetFor(reaction);
-      if (revision != _revision || !await _exists(asset)) return;
+      if (asset == null || revision != _revision || !await _exists(asset)) {
+        return;
+      }
       if (revision != _revision) return;
-      await _output.play(asset, loop: reaction == CharacterReaction.normal);
+      await _output.play(asset, loop: loop);
     });
   }
 
   Future<void> stop(Object owner) {
     if (!identical(_owner, owner)) return Future.value();
     _owner = null;
-    ++_revision;
-    return _enqueue(_output.stop);
+    return _playAsset(
+      _backgroundEnabled ? 'assets/audio/background.mp3' : null,
+      true,
+    );
   }
 
   Future<void> _enqueue(Future<void> Function() action) {

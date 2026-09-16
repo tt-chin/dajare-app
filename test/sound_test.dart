@@ -6,6 +6,7 @@ import 'package:dajare_app/services/judging_sound.dart';
 import 'package:dajare_app/services/sound_settings.dart';
 import 'package:dajare_app/screens/settings_screen.dart';
 import 'package:dajare_app/widgets/character_performance.dart';
+import 'package:dajare_app/widgets/background_music.dart';
 
 class FakeOutput implements SoundOutput {
   final events = <String>[];
@@ -23,6 +24,110 @@ class FakeOutput implements SoundOutput {
 }
 
 void main() {
+  testWidgets('enabling sound on a result resumes ordinary BGM', (
+    tester,
+  ) async {
+    final output = FakeOutput();
+    final sound = JudgingSound(output: output, exists: (_) async => true);
+    final settings = SoundSettings(write: (_) async {});
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BackgroundMusic(
+          sound: sound,
+          settings: settings,
+          child: CharacterPerformance(
+            reaction: CharacterReaction.good,
+            imageKey: const Key('image'),
+            sound: sound,
+            settings: settings,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await settings.setEnabled(true);
+    await tester.pump();
+    expect(output.events.last, 'assets/audio/background.mp3:true');
+    expect(output.events.where((event) => event.contains('good.mp3')), isEmpty);
+  });
+  test(
+    'background switches to judging and returns only after result leaves',
+    () async {
+      final output = FakeOutput();
+      final sound = JudgingSound(output: output, exists: (_) async => true);
+      final app = Object(), waiting = Object(), result = Object();
+      await sound.background(app, true);
+      expect(output.events.last, 'assets/audio/background.mp3:true');
+      await sound.play(waiting, CharacterReaction.normal);
+      expect(output.events.sublist(output.events.length - 2), [
+        'stop',
+        'assets/audio/judging.mp3:true',
+      ]);
+      await sound.play(result, CharacterReaction.laugh);
+      await sound.stop(waiting);
+      expect(output.events.last, 'assets/audio/laugh.mp3:false');
+      await sound.stop(result);
+      expect(output.events.last, 'assets/audio/background.mp3:true');
+      await sound.removeBackground(app);
+      expect(output.events.last, 'stop');
+    },
+  );
+
+  testWidgets(
+    'application BGM observes mute, lifecycle and active judging priority',
+    (tester) async {
+      final output = FakeOutput();
+      final sound = JudgingSound(output: output, exists: (_) async => true);
+      final settings = SoundSettings(write: (_) async {});
+      Widget app({bool judging = false}) => MaterialApp(
+        home: BackgroundMusic(
+          sound: sound,
+          settings: settings,
+          child: judging
+              ? CharacterPerformance(
+                  reaction: CharacterReaction.normal,
+                  imageKey: const Key('image'),
+                  sound: sound,
+                  settings: settings,
+                )
+              : const SizedBox(),
+        ),
+      );
+      await tester.pumpWidget(app());
+      await tester.pump();
+      expect(output.events.where((event) => event.contains('.mp3')), isEmpty);
+      await settings.setEnabled(true);
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/background.mp3:true');
+      await tester.pumpWidget(app(judging: true));
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/judging.mp3:true');
+      await settings.setEnabled(false);
+      await tester.pump();
+      expect(output.events.last, 'stop');
+      await settings.setEnabled(true);
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/judging.mp3:true');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(output.events.last, 'stop');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/judging.mp3:true');
+      await tester.pumpWidget(app());
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/background.mp3:true');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      expect(output.events.last, 'stop');
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(output.events.last, 'assets/audio/background.mp3:true');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump();
+      expect(output.events.last, 'stop');
+    },
+  );
   test(
     'sound defaults OFF, persists both values and survives restart',
     () async {
