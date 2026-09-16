@@ -23,6 +23,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('まだダジャレがないよ！'), findsOneWidget);
+    expect(find.text('ダジャレ図鑑には、新しいものから100件まで保存されます。'), findsOneWidget);
     expect(find.text('ダジャレを作る'), findsOneWidget);
   });
 
@@ -53,6 +54,10 @@ void main() {
 
     expect(find.text('パンダがパンだ！'), findsOneWidget);
     expect(find.text('92点'), findsOneWidget);
+    expect(
+      find.byKey(const Key('collection_retention_notice')),
+      findsOneWidget,
+    );
     expect(find.text('天才！🤩'), findsOneWidget);
     expect(find.text('音がそっくりで楽しいね！'), findsOneWidget);
     expect(find.text('8/24'), findsOneWidget);

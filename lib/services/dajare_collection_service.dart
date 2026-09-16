@@ -22,6 +22,7 @@ class DajareCollectionService {
           .doc(uid)
           .collection('dajareEntries')
           .orderBy('createdAt', descending: true)
+          .limit(100)
           .get();
 
       return snapshot.docs

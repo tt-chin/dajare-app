@@ -47,30 +47,44 @@ class _CollectionScreenState extends State<CollectionScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('ダジャレ図鑑')),
       body: SafeArea(
-        child: FutureBuilder<List<DajareEntry>>(
-          future: _entries,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const _CollectionLoading();
-            }
-            if (snapshot.hasError) {
-              return _CollectionError(onRetry: _retry);
-            }
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+              child: Text(
+                'ダジャレ図鑑には、新しいものから100件まで保存されます。',
+                key: const Key('collection_retention_notice'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            Expanded(
+              child: FutureBuilder<List<DajareEntry>>(
+                future: _entries,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState != ConnectionState.done) {
+                    return const _CollectionLoading();
+                  }
+                  if (snapshot.hasError) {
+                    return _CollectionError(onRetry: _retry);
+                  }
 
-            final entries = snapshot.data ?? const [];
-            if (entries.isEmpty) {
-              return _CollectionEmpty(onCreate: _openInput);
-            }
+                  final entries = snapshot.data ?? const [];
+                  if (entries.isEmpty) {
+                    return _CollectionEmpty(onCreate: _openInput);
+                  }
 
-            return ListView.separated(
-              key: const Key('collection_list'),
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-              itemCount: entries.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 14),
-              itemBuilder: (context, index) =>
-                  _DajareEntryCard(entry: entries[index], index: index),
-            );
-          },
+                  return ListView.separated(
+                    key: const Key('collection_list'),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                    itemCount: entries.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 14),
+                    itemBuilder: (context, index) =>
+                        _DajareEntryCard(entry: entries[index], index: index),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -12,6 +12,8 @@ MVP 使用 Anonymous Auth。正式環境拒絕未經驗證的呼叫，且不得�
 `users/{uid}`；`users/{uid}/dajareEntries/{entryId}`。
 可信的判定結果欄位由伺服器控制。用戶端不得建立/更新假分數。使用者只能讀取自己的資料。預設拒絕存取。
 
+Post-Task 14：每位使用者的図鑑保留最新 100 筆。Functions 在新結果成功保存後，以 `createdAt`（同時間以文件 ID）決定順序，由 Admin SDK 分批刪除較舊資料。只處理已驗證 UID 的 `dajareEntries`；cleanup 失敗記錄安全診斷並仍回傳判定結果，下次成功保存時再次整理。Flutter 維持新到舊的顯示順序，最多讀取 100 筆，不具刪除權限。
+
 ## 密鑰
 使用 Firebase/Google Cloud Secret Manager，例如 `GEMINI_API_KEY`；不得 commit，也不得放在 Flutter/log/issue/範例中。
 

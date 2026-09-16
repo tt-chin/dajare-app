@@ -2,7 +2,7 @@ import {safeErrorCode} from "./error_code";
 
 export type JudgeStage = "validation" | "firestore_init" | "quota_read" |
   "quota_write" | "ai_judge" | "entry_write" |
-  "admin_app_init" | "firestore_client_init";
+  "admin_app_init" | "firestore_client_init" | "entry_cleanup";
 export type ReportStage = (stage: JudgeStage) => void;
 
 // Match locally, but emit only fixed labels, never provider messages or stacks.

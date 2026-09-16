@@ -5,6 +5,8 @@ export interface JudgeServiceDependencies {
   judge: (text: string) => Promise<JudgeResult>;
   save: (uid: string, text: string, result: JudgeResult) => Promise<void>;
   onSaveFailure: (error: unknown) => void;
+  cleanup?: (uid: string) => Promise<void>;
+  onCleanupFailure?: (error: unknown) => void;
 }
 
 export async function judgeAndPersist(
@@ -19,6 +21,13 @@ export async function judgeAndPersist(
     await dependencies.save(uid, text, result);
   } catch (error) {
     dependencies.onSaveFailure(error);
+    return result;
+  }
+
+  try {
+    await dependencies.cleanup?.(uid);
+  } catch (error) {
+    dependencies.onCleanupFailure?.(error);
   }
 
   return result;

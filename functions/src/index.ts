@@ -7,6 +7,7 @@ import {
   UnauthenticatedRequestError,
 } from "./authentication";
 import {saveTrustedDajareEntry} from "./dajare_entry_store";
+import {cleanupDajareEntries} from "./collection_retention";
 import {JudgeStage, safeDiagnostics} from "./diagnostics";
 import {
   GeminiUnavailableError,
@@ -56,6 +57,11 @@ export const judgeDajare = onCall<unknown, Promise<JudgeResult>>(
         onSaveFailure: (saveError) => {
           logger.warn("judgeDajare persistence failed",
             safeDiagnostics(saveError, stage));
+        },
+        cleanup: cleanupDajareEntries,
+        onCleanupFailure: (error) => {
+          logger.warn("judgeDajare cleanup failed",
+            safeDiagnostics(error, "entry_cleanup"));
         },
       });
     } catch (error) {
