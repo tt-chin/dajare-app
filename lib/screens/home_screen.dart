@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
                         const SelectedCharacter(
                           reaction: CharacterReaction.normal,
                           imageKey: Key('home_character_asset'),
-                          height: 144,
+                          height: 324,
                         ),
                         const SizedBox(height: 16),
                         Text(

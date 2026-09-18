@@ -70,4 +70,13 @@ Home 可以使用 `normal`。Result 使用依分數對應的反應素材。早�
 已核准的組合：Character A 與 Character B × `normal/cold/good/laugh/genius/legend`。
 
 ## Post-Task 14：正式判定等待 sequence
-使用使用者提供的 `character_a_judging_optimized.zip` 與 `character_b_judging_optimized.zip` 原始 PNG，不加工、不重新生成。路徑為 `assets/animations/{character_a|character_b}/judging/frame_00.png`～`frame_23.png`。每組 24 張 416×560 RGBA，8 FPS，3 秒正向循環。此素材只用於等待，原有 reaction PNG 與 level 對應維持不變。
+A/B 皆使用 48 張 416×560 RGBA PNG，16 FPS、3 秒循環；路徑 assets/animations/{character_a|character_b}/judging/frame_00.png～frame_47.png。2026-09-18 依使用者要求原樣替換為 8ece205163985e1f22d731dc7b4cf5ca.zip（A）與 1e03c0ad2e3b040ac4026e6881864136.zip（B）。部分原圖仍有髮絲切口，已告知使用者；程式不重繪素材。
+
+## 2026-09-18：表情素材更新
+依使用者核准，以 Downloads/1.zip 的 expression_pack/A、B 各六張 PNG 原樣替換既有 normal/cold/good/laugh/genius/legend。每張 1920×2560 RGBA，保留透明通道，不裁切或重新生成；部署檔名沿用既有小寫路徑。判定等待動畫素材與反應對應不變。
+
+## 2026-09-19：A 動畫 v3
+A 改用使用者確認的影片去背 v3 素材，48 張 416×560 RGBA，12 FPS、4 秒循環。已修正鞋間背景線及胯下遮罩切線。B 維持既有 48 張、16 FPS、3 秒。素材路徑與反應表情不變。
+
+## 2026-09-19：B 影片去背動畫
+B 改用使用者確認的 811464553.623134.mp4 去背素材，48 張 416×560 RGBA，固定透明邊距，12 FPS、4 秒循環。A 維持已核准的 v3。現在兩組皆 48 幀、12 FPS、4 秒，沿用預載及最後 125ms 淡化；既有路徑與反應表情不變。

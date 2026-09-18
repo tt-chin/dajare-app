@@ -215,6 +215,7 @@ void main() {
   testWidgets('opens today topic from Home', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
+    await tester.ensureVisible(find.text('今日のお題'));
     await tester.tap(find.text('今日のお題'));
     await tester.pumpAndSettle();
 

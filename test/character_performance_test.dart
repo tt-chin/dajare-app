@@ -18,7 +18,7 @@ const result = DajareResult(
 );
 
 void main() {
-  testWidgets('8 FPS advances 00 through 23 and loops; dispose stops ticker', (
+  testWidgets('loop blends at the seam without holding the first frame', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -29,23 +29,64 @@ void main() {
         ),
       ),
     );
-    String path() =>
-        (tester.widget<Image>(find.byKey(const Key('frame'))).image
-                as AssetImage)
-            .assetName;
-    expect(path(), endsWith('frame_00.png'));
-    for (var frame = 1; frame < 24; frame++) {
-      await tester.pump(const Duration(milliseconds: 125));
-      expect(path(), endsWith('frame_${frame.toString().padLeft(2, '0')}.png'));
-    }
-    await tester.pump(const Duration(milliseconds: 125));
-    expect(path(), endsWith('frame_00.png'));
+    await tester.pump(const Duration(milliseconds: 3930));
+    expect(find.byKey(const Key('judging_loop_blend')), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(find.byKey(const Key('judging_loop_blend')), findsNothing);
+    final image = tester.widget<Image>(find.byKey(const Key('frame')));
+    expect((image.image as AssetImage).assetName, endsWith('frame_01.png'));
     await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(seconds: 4));
     expect(tester.takeException(), isNull);
-    expect(tester.binding.transientCallbackCount, 0);
   });
+  for (final character in CharacterId.values) {
+    testWidgets(
+      '$character advances all frames and loops; dispose stops ticker',
+      (tester) async {
+        final settings = CharacterSettings(write: (_) async {});
+        await settings.select(character);
+        final count = CharacterPresentation.judgingFrameCount(character);
+        final cycleUs = CharacterPresentation.judgingDuration(
+          character,
+        ).inMicroseconds;
+        var elapsedUs = 0;
+        Future<void> advanceToFrame(int frame) async {
+          final targetUs = (frame * cycleUs / count).ceil();
+          await tester.pump(Duration(microseconds: targetUs - elapsedUs));
+          elapsedUs = targetUs;
+        }
 
+        await tester.pumpWidget(
+          MaterialApp(
+            home: CharacterPerformance(
+              characterSettings: settings,
+              reaction: CharacterReaction.normal,
+              imageKey: const Key('frame'),
+            ),
+          ),
+        );
+        String path() =>
+            (tester.widget<Image>(find.byKey(const Key('frame'))).image
+                    as AssetImage)
+                .assetName;
+        expect(path(), endsWith('frame_00.png'));
+        for (var frame = 1; frame < count; frame++) {
+          await advanceToFrame(frame);
+          expect(
+            path(),
+            endsWith('frame_${frame.toString().padLeft(2, '0')}.png'),
+          );
+        }
+        await advanceToFrame(count);
+        expect(path(), endsWith('frame_00.png'));
+        await advanceToFrame(count + 1);
+        expect(path(), endsWith('frame_01.png'));
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 4));
+        expect(tester.takeException(), isNull);
+        expect(tester.binding.transientCallbackCount, 0);
+      },
+    );
+  }
   testWidgets('failed sequence frame falls back to normal PNG', (tester) async {
     await tester.pumpWidget(
       MaterialApp(

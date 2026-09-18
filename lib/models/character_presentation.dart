@@ -5,10 +5,19 @@ enum CharacterReaction { normal, cold, good, laugh, genius, legend }
 class CharacterPresentation {
   const CharacterPresentation._();
 
-  static const judgingFrameCount = 24;
-  static const judgingFps = 8;
+  static int judgingFrameCount(CharacterId character) => 48;
+  static int judgingFps(CharacterId character) => 12;
+  static Duration judgingDuration(CharacterId character) => Duration(
+    microseconds:
+        judgingFrameCount(character) * 1000000 ~/ judgingFps(character),
+  );
   static String judgingFramePath(CharacterId character, int frame) {
-    RangeError.checkValueInInterval(frame, 0, judgingFrameCount - 1, 'frame');
+    RangeError.checkValueInInterval(
+      frame,
+      0,
+      judgingFrameCount(character) - 1,
+      'frame',
+    );
     final directory = switch (character) {
       CharacterId.characterA => 'character_a',
       CharacterId.characterB => 'character_b',

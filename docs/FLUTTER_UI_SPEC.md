@@ -26,7 +26,7 @@ Flutter 負責反應的視覺呈現、素材、動畫、顏色、widget、導覽
 `dart format .`、`flutter analyze`、`flutter test`。
 
 ## Post-Task 14：Result Animation & Sound
-- 判定等待中使用已選角色的正式 PNG sequence：`assets/animations/character_a/judging/` 或 `character_b/judging/` 的 frame_00～23，24 frames / 8 FPS / 3 秒，00→23→00 循環。依真正的請求完成時間結束，不延遲 AI 回應；載入失敗退回原有 normal PNG。
+- 判定等待中使用已選角色的正式 PNG sequence：`assets/animations/character_a/judging/` 或 `character_b/judging/` ；A/B 皆為 frame_00～47；A/B 皆為 12 FPS / 4 秒連續循環，邊界不暫停。最後 125ms 與 frame_00 交叉淡化，降低首尾姿勢差異的突兀感。依真正的請求完成時間結束，不延遲 AI 回應；載入失敗退回原有 normal PNG。沿用 Flutter ImageCache 與 gaplessPlayback，進入等待畫面時為選中角色預載一次，不在每幀或每圈重新預載。
 - Result 使用既有 level → reaction 對應，約 700ms 的輕微 scale/bounce 後顯示完整結果。系統要求減少動畫時直接顯示。
 - 一般設定畫面提供サウンド ON/OFF，沿用 shared_preferences 本地保存（`sound_enabled`，預設 OFF）；啟動時角色選擇流程不變。
 - 沿用 audioplayers 與單一音效服務。一般畫面（含角色選擇、Home、輸入、題目、圖鑑、設定）循環 background.mp3；判定等待時停止一般 BGM，改循環 judging.mp3；結果畫面停止判定 BGM，返回一般畫面後恢復一般 BGM。切換歌曲由頭開始，不保留原播放位置。
