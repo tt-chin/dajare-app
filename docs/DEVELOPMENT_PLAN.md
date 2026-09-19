@@ -34,6 +34,6 @@ Codex 一次只實作一個任務，完成後停下來等待審查。
 - 範圍決定：只驗證 iOS；Android 驗證目前不在範圍內。
 - 語音輸入已修正並在裝置上驗證：原本收到第一筆部分結果時，UI 就離開 `listening`，也沒有設定 `listenFor`/`pauseFor`，導致辨識一直進行、文字跨次累積。現在會自動停止（10 秒/3 秒），手動停止正常，會在 `SpeechToText` singleton 上重新綁定 listener；沒偵測到講話（`error_no_match`/`error_speech_timeout`）時顯示重試訊息，而不是「麥克風無法使用」。
 - `flutter run` 斷線後若 app 繼續執行，debug build 會當掉（SIGBUS、KERN_CODESIGN_ERROR）；請保持 debugger 連線，或使用 `--release` 進行不接線的測試。
-- TestFlight：build 1.0.0 (2) 已於 2026-09-16 從 Xcode Organizer 以「TestFlight Internal Only」上傳，包含角色選擇、評分動畫與音效（前一版為 build 1.0.0 (1)）（bundle ID `com.ttchin.dajareApp`，Cloud Managed Apple Distribution 簽章）。上傳前先在裝置上驗證 release build。Info.plist 已加入 `ITSAppUsesNonExemptEncryption = false`。launch image 仍是 Flutter 預設的佔位圖。team 中有一個先前嘗試時留下、未使用的 App ID `com.rtsai.dajareApp`。
+- TestFlight：build 1.0.0 (3) 已於 2026-09-19 從 Xcode Organizer 以「TestFlight Internal Only」上傳，包含新版角色立繪與 4 秒評分動畫循環（前一版為 build 1.0.0 (2)）。IPA 約 122MB，主要來自角色立繪（每張約 5MB）（bundle ID `com.ttchin.dajareApp`，Cloud Managed Apple Distribution 簽章）。上傳前先在裝置上驗證 release build。Info.plist 已加入 `ITSAppUsesNonExemptEncryption = false`。launch image 仍是 Flutter 預設的佔位圖。team 中有一個先前嘗試時留下、未使用的 App ID `com.rtsai.dajareApp`。
 
 當被要求執行 `Task XX` 時：閱讀相關規格、檢查 repo、只實作 XX、執行檢查、回報變更的檔案/指令/結果/手動步驟，然後停止。
